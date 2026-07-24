@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>在庫・材料管理 - 串焼KEMURI屋</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Segoe UI", "Meiryo", sans-serif;
+    margin: 0 auto; padding: 12px; max-width: 760px;
+    background: #f5f2ee; color: #2a2420;
+  }
+  h1 { font-size: 19px; margin: 0 0 2px; }
+  .sub { color: #8a7f76; font-size: 12px; margin-bottom: 10px; }
+  .tabs { display: flex; gap: 5px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 78px; padding: 9px 4px; border: none; border-radius: 10px;
+    background: #e7ddd0; color: #6a5f56; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .tab.on { background: #4a4038; color: #fff; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 13px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 12px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 8px; color: #4a4038; }
+  label { font-size: 12px; color: #6a5f56; display: block; margin-bottom: 3px; }
+  input, select, textarea {
+    width: 100%; padding: 9px 10px; border: 1px solid #ddd4cb;
+    border-radius: 8px; font-size: 15px; background: #fff; color: #2a2420;
+  }
+  textarea { min-height: 130px; font-family: monospace; font-size: 13px; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  button.act {
+    padding: 11px 14px; border: none; border-radius: 9px; cursor: pointer;
+    background: #c9622f; color: #fff; font-size: 15px; font-weight: 600; width: 100%;
+  }
+  button.sub2 { background: #6a5f56; }
+  button.ghost { background: #e7ddd0; color: #4a4038; }
+  button.mini {
+    padding: 5px 9px; border: none; border-radius: 7px; background: #e7ddd0;
+    color: #6a5f56; font-size: 13px; cursor: pointer; width: auto;
+  }
+  button.mini.del { background: #f3ded4; color: #b04a20; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; color: #8a7f76; padding: 6px 3px; border-bottom: 2px solid #eee2d6; white-space: nowrap; }
+  td { padding: 5px 3px; border-bottom: 1px solid #f0e9e0; vertical-align: middle; font-size: 14px; }
+  td.num, th.num { text-align: right; }
+  .muted { color: #8a7f76; font-size: 12px; }
+  .warn { background: #fff6ed; border-left: 4px solid #e08a3c; padding: 9px 11px; border-radius: 6px; font-size: 13px; margin-bottom: 10px; }
+  .alert { background: #fdeeea; border-left: 4px solid #c9412f; padding: 9px 11px; border-radius: 6px; font-size: 13px; margin-bottom: 10px; }
+  .ok { background: #eef6ed; border-left: 4px solid #4c8a3c; padding: 9px 11px; border-radius: 6px; font-size: 13px; margin-bottom: 10px; }
+  .hide { display: none; }
+  .pill { display: inline-block; background: #eee2d6; color: #6a5f56; border-radius: 20px; padding: 2px 9px; font-size: 11px; margin-left: 5px; }
+  .pill.red { background: #f6d9d2; color: #b0402a; }
+  .gap { margin-bottom: 9px; }
+  .ing-line { display: flex; gap: 5px; margin-bottom: 6px; align-items: center; }
+  .ing-line .i-name { flex: 3; min-width: 0; }
+  .ing-line .i-amt { flex: 1.3; min-width: 0; text-align: right; }
+  .ing-line .i-unit { flex: 1; min-width: 0; padding: 9px 5px; font-size: 13px; background: #faf7f3; }
+  hr { border: none; border-top: 1px solid #f0e9e0; margin: 12px 0; }
+  details summary { cursor: pointer; font-size: 13px; color: #6a5f56; padding: 4px 0; }
+  /* 画面内のお知らせ・確認（ブラウザのポップアップは使わない） */
+  #toast {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px;
+    background: #4a4038; color: #fff; padding: 12px 18px; border-radius: 10px;
+    font-size: 14px; max-width: 92%; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    z-index: 99; white-space: pre-wrap; display: none; text-align: center;
+  }
+  #ask-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  #ask-box { background: #fff; border-radius: 14px; padding: 18px; max-width: 340px; width: 100%; }
+  #ask-msg { font-size: 15px; margin-bottom: 15px; white-space: pre-wrap; }
+  /* マニュアル */
+  .m-card h3 { margin: 0 0 8px; font-size: 17px; color: #2a2420; }
+  .m-photo { max-width: 100%; max-height: 230px; object-fit: cover; border-radius: 9px; margin-bottom: 9px; display: block; }
+  .m-sec { margin-top: 9px; }
+  .m-sec > b { font-size: 11px; color: #8a7f76; display: block; margin-bottom: 3px; letter-spacing: .04em; }
+  .m-steps { white-space: pre-wrap; font-size: 14px; line-height: 1.55; }
+  .m-ings { margin: 2px 0 0; padding-left: 20px; }
+  .m-ings li { font-size: 14px; padding: 1px 0; }
+  /* 印刷（送信先＝PDFに保存でPDF化もできる） */
+  @media print {
+    body { background: #fff; padding: 0; max-width: none; }
+    .tabs, h1, .sub, #toast, #ask-bg, .no-print { display: none !important; }
+    #p-daily, #p-usage, #p-stock, #p-recipe, #p-data { display: none !important; }
+    #p-manual { display: block !important; }
+    .m-card { page-break-inside: avoid; box-shadow: none; border: 1px solid #ccc; margin-bottom: 10px; }
+    .m-photo { max-height: 180px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="ask-bg"><div id="ask-box">
+  <div id="ask-msg"></div>
+  <input id="ask-input" class="hide gap" onkeydown="if(event.key==='Enter')askYes()">
+  <div class="row">
+    <button class="act" onclick="askYes()">はい</button>
+    <button class="act ghost" onclick="askNo()">やめる</button>
+  </div>
+</div></div>
+
+<h1>在庫・材料管理</h1>
+<div class="sub">串焼KEMURI屋 ／ E-POS 商品別集計から材料使用量を自動計算</div>
+
+<div class="tabs">
+  <button class="tab on" data-t="daily">今日の出数</button>
+  <button class="tab" data-t="usage">材料使用量</button>
+  <button class="tab" data-t="stock">在庫</button>
+  <button class="tab" data-t="recipe">レシピ</button>
+  <button class="tab" data-t="manual">マニュアル</button>
+  <button class="tab" data-t="data">データ</button>
+</div>
+
+<!-- ============ 今日の出数 ============ -->
+<div id="p-daily">
+  <div class="card">
+    <h2>① E-POSの「商品別商品集計」を貼り付け</h2>
+    <div class="muted gap">
+      POS管理画面 → 集計 → 商品別商品集計 で日付を選んで抽出 →
+      表の部分を全部コピーして下に貼り付け。CSVダウンロードした中身でもOK。
+    </div>
+    <label>営業日</label>
+    <input type="date" id="d-date" class="gap">
+    <label>貼り付けエリア</label>
+    <textarea id="d-paste" placeholder="例）&#10;豚バラ串&#9;42&#9;6,300&#10;やげん軟骨&#9;18&#9;2,700&#10;オリオン生&#9;55&#9;27,500"></textarea>
+    <div class="row" style="margin-top:9px">
+      <button class="act" onclick="parsePaste()">読み取る</button>
+      <button class="act ghost" onclick="addManualRow()">1行手入力</button>
+    </div>
+  </div>
+
+  <div class="card" id="d-result-card">
+    <h2>② 読み取り結果 <span class="pill" id="d-count">0品</span></h2>
+    <div id="d-warn"></div>
+    <table>
+      <thead><tr><th>商品名</th><th class="num">出数</th><th></th></tr></thead>
+      <tbody id="d-rows"></tbody>
+    </table>
+    <div style="margin-top:11px">
+      <button class="act" onclick="saveDaily()">この内容で保存する</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>保存済みの営業日</h2>
+    <div id="d-history" class="muted">まだ無いさ</div>
+  </div>
+</div>
+
+<!-- ============ 材料使用量 ============ -->
+<div id="p-usage" class="hide">
+  <div class="card">
+    <h2>集計する期間</h2>
+    <div class="row gap">
+      <div><label>開始</label><input type="date" id="u-from"></div>
+      <div><label>終了</label><input type="date" id="u-to"></div>
+    </div>
+    <div class="row">
+      <button class="act" onclick="calcUsage()">集計する</button>
+      <button class="act ghost" onclick="setToday()">今日だけ</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>材料の使用量</h2>
+    <div id="u-warn"></div>
+    <table>
+      <thead><tr><th>材料</th><th class="num">使用量</th><th class="num">在庫残</th></tr></thead>
+      <tbody id="u-rows"><tr><td colspan="3" class="muted">「集計する」を押してね</td></tr></tbody>
+    </table>
+    <div style="margin-top:11px">
+      <button class="act sub2" onclick="applyToStock()">この使用量を在庫から引く</button>
+      <div class="muted" style="margin-top:6px">※同じ期間を二重に引かないよう注意（引いた履歴は「在庫」タブに残るさ）</div>
+    </div>
+  </div>
+  <div class="card">
+    <details>
+      <summary>商品ごとの内訳を見る</summary>
+      <div id="u-detail" class="muted" style="margin-top:8px">—</div>
+    </details>
+  </div>
+</div>
+
+<!-- ============ 在庫 ============ -->
+<div id="p-stock" class="hide">
+  <div class="card">
+    <h2>材料マスタ・在庫</h2>
+    <div id="s-alert"></div>
+    <table>
+      <thead><tr><th>材料</th><th>単位</th><th class="num">在庫</th><th class="num">発注点</th><th></th></tr></thead>
+      <tbody id="s-rows"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2>材料を追加</h2>
+    <div class="row gap">
+      <div style="flex:2"><label>材料名</label><input id="s-name" placeholder="豚バラ"></div>
+      <div><label>単位</label><span id="s-unit-wrap"></span></div>
+    </div>
+    <div class="row gap">
+      <div><label>現在庫</label><input id="s-qty" type="number" step="any" value="0"></div>
+      <div><label>発注点</label><input id="s-min" type="number" step="any" value="0"></div>
+    </div>
+    <button class="act" onclick="addIngredient()">追加する</button>
+  </div>
+  <div class="card">
+    <h2>仕入れ入力（在庫を足す）</h2>
+    <div class="row gap">
+      <div style="flex:2"><label>材料</label><select id="in-ing"></select></div>
+      <div><label>数量</label><input id="in-qty" type="number" step="any"></div>
+    </div>
+    <button class="act sub2" onclick="addPurchase()">入庫する</button>
+  </div>
+  <div class="card">
+    <h2>在庫の動き（新しい順）</h2>
+    <div id="s-log" class="muted">まだ無いさ</div>
+  </div>
+</div>
+
+<!-- ============ レシピ ============ -->
+<div id="p-recipe" class="hide">
+  <div class="card">
+    <h2>レシピ登録（商品 → 材料）</h2>
+    <div class="muted gap">1食ぶんに使う材料と量を入れてね。材料名は直接打ってOK（新しいのは自動で材料マスタに登録されるさ）。</div>
+    <datalist id="ing-list"></datalist>
+    <label>商品名（登録済み・出数から拾ったもの）</label>
+    <select id="r-menu" class="gap" onchange="loadRecipe()"></select>
+    <label>新しい商品を作るとき</label>
+    <div class="row gap">
+      <input id="r-new" style="flex:2" placeholder="例）鶏皮ポン酢" onkeydown="if(event.key==='Enter')newMenuName()">
+      <button class="mini" style="flex:0 0 66px;padding:9px" onclick="newMenuName()">作る</button>
+    </div>
+    <div id="r-lines"></div>
+    <button class="mini" onclick="addIngLine()" style="margin:4px 0 10px">＋ 材料を足す</button>
+    <hr>
+    <div class="muted gap">↓ ここはスタッフ用マニュアルに出る欄さ（無くてもOK）</div>
+    <label>作り方・仕込みの手順</label>
+    <textarea id="r-steps" class="gap" style="min-height:100px" placeholder="例）&#10;1. 鶏モモを一口大に切る&#10;2. 串に4切れ刺す&#10;3. 強火で両面3分ずつ焼く&#10;4. タレを2度づけして仕上げ"></textarea>
+    <label>盛り付け・提供の注意</label>
+    <textarea id="r-notes" class="gap" style="min-height:60px" placeholder="例）レモンを添えて。七味は別皿。アツアツで提供"></textarea>
+    <label>写真（完成・盛り付け）</label>
+    <div id="r-photo-wrap" class="gap"></div>
+    <input type="file" id="r-photo" accept="image/*" class="gap" onchange="pickPhoto(this)">
+    <button class="act" onclick="saveRecipe()">保存する（レシピ＋マニュアル）</button>
+  </div>
+  <div class="card">
+    <h2>E-POSからメニューをまとめて取り込む</h2>
+    <div class="muted gap">
+      E-POSの商品一覧（商品登録の画面や、期間を長めにした商品別商品集計）をコピーして貼り付け →
+      商品名だけ抜き出して登録するさ。出数ゼロの商品も先に入れとける。
+    </div>
+    <textarea id="m-paste" style="min-height:110px" placeholder="例）&#10;豚バラ串&#9;190&#10;鶏皮串&#9;190&#10;鶏皮ポン酢&#9;480&#10;（商品名だけの行でもOK）"></textarea>
+    <div class="row" style="margin-top:9px">
+      <button class="act" onclick="importMenus()">メニューを取り込む</button>
+    </div>
+    <div id="m-result"></div>
+  </div>
+
+  <div class="card">
+    <h2>登録済みレシピ <span class="pill" id="r-count">0</span></h2>
+    <div id="r-list" class="muted">まだ無いさ</div>
+  </div>
+  <div class="card">
+    <h2>レシピ未登録の商品</h2>
+    <div class="muted gap">出数は取れてるけど材料が分からん商品。タップすると上の欄にセットされるさ。</div>
+    <div id="r-missing" class="muted">—</div>
+  </div>
+</div>
+
+<!-- ============ マニュアル ============ -->
+<div id="p-manual" class="hide">
+  <div class="card no-print">
+    <h2>オペレーションマニュアル <span class="pill" id="man-count">0</span></h2>
+    <div class="muted gap">「レシピ」タブで登録した商品が、そのままスタッフ用マニュアルになるさ。作り方・盛り付け・写真も「レシピ」タブの各商品に入れてね。</div>
+    <input id="man-search" class="gap" placeholder="商品名でしぼりこみ…" oninput="renderManual()">
+    <button class="act" onclick="window.print()">印刷する</button>
+    <div class="muted" style="margin-top:6px">※印刷画面で「送信先＝PDFに保存」を選ぶと、スマホで見せるPDFも作れるさ</div>
+  </div>
+  <div id="man-list"></div>
+</div>
+
+<!-- ============ データ ============ -->
+<div id="p-data" class="hide">
+  <div class="card">
+    <h2>バックアップ / 引っ越し</h2>
+    <div class="muted gap">
+      データはこの端末のブラウザに保存されてるさ。スマホとPCで同じ内容を使いたいときは、
+      ここでコピーして相手側に貼り付けてね。
+    </div>
+    <button class="act ghost gap" onclick="exportData()">今のデータを書き出す</button>
+    <textarea id="io-box" placeholder="ここに書き出し内容が出る／貼り付けて読み込む"></textarea>
+    <div class="row" style="margin-top:9px">
+      <button class="act sub2" onclick="importData()">貼り付けた内容を読み込む</button>
+      <button class="act ghost" onclick="copyBox()">コピー</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>サンプルを入れる</h2>
+    <div class="muted gap">材料とレシピの例を入れて動きを試せるさ。既存データには足すだけ。</div>
+    <button class="act ghost" onclick="loadSample()">サンプル投入</button>
+  </div>
+  <div class="card">
+    <h2>全消し</h2>
+    <button class="act" style="background:#b0402a" onclick="wipe()">全部消す</button>
+  </div>
+</div>
+
+<script>
+/* ========== ストレージ ========== */
+const KEY = 'kemuri_zaiko_v1';
+let DB = load();
+
+function blank() {
+  return { ingredients: [], recipes: {}, days: {}, log: [], units: [], menus: [], manuals: {} };
+}
+
+/* ========== 単位 ========== */
+const UNITS = ['本', '串', '個', 'g', 'kg', 'ml', 'L', '枚', '玉', '束', '把',
+  '袋', 'パック', '缶', '瓶', '切れ', '杯', '尾', '丁', '合', '人前', '皿', '箱', 'ケース'];
+
+// 単位の表記ゆれを揃える（全角ｇ→g、㎖→ml など）
+function normUnit(u) {
+  if (!u) return '';
+  let s = String(u).trim()
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/㎖|㎕|ｍｌ/gi, 'ml').replace(/㎏|ｋｇ/gi, 'kg').replace(/㌘/g, 'g')
+    .replace(/㏄/g, 'cc').replace(/ℓ|㍑/g, 'L').replace(/\s+/g, '');
+  if (/^l$/i.test(s)) s = 'L';
+  if (/^ml$/i.test(s)) s = 'ml';
+  if (/^kg$/i.test(s)) s = 'kg';
+  if (/^g$/i.test(s)) s = 'g';
+  return s;
+}
+
+// 保存済みデータの単位をまとめて揃える（起動時に1回）
+function normalizeAllUnits() {
+  let changed = 0;
+  DB.ingredients.forEach(g => { const n = normUnit(g.unit); if (n !== g.unit) { g.unit = n; changed++; } });
+  Object.values(DB.recipes).forEach(r => r.forEach(i => {
+    const n = normUnit(i.unit); if (n !== i.unit) { i.unit = n; changed++; }
+  }));
+  DB.units = [...new Set((DB.units || []).map(normUnit))].filter(u => u && !UNITS.includes(u));
+  if (changed) save();
+}
+
+// 既定の単位 ＋ 自分で足した単位 ＋ すでに使ってる単位
+function allUnits() {
+  const s = [...UNITS, ...(DB.units || [])];
+  DB.ingredients.forEach(g => { if (g.unit) s.push(normUnit(g.unit)); });
+  Object.values(DB.recipes).forEach(r => r.forEach(i => { if (i.unit) s.push(normUnit(i.unit)); }));
+  return [...new Set(s.filter(Boolean))];
+}
+
+function unitSelectHTML(selected, cls) {
+  const opts = allUnits().map(u =>
+    `<option${u === selected ? ' selected' : ''}>${esc(u)}</option>`).join('');
+  return `<select class="${cls}" onchange="unitChanged(this)">
+    <option value=""${selected ? '' : ' selected'}>—</option>${opts}
+    <option value="__new__">＋ 単位を追加…</option></select>`;
+}
+
+// 「＋ 単位を追加…」を選んだとき
+let unitPrev = '';
+function unitChanged(sel) {
+  if (sel.value !== '__new__') {
+    unitPrev = sel.value;
+    // 在庫表の単位を直接いじった場合はその場で保存
+    if (sel.dataset.ing != null) { DB.ingredients[+sel.dataset.ing].unit = sel.value; save(); }
+    return;
+  }
+  const back = unitPrev;
+  sel.value = back;
+  askText('新しい単位を入れてね', '例）合 / パック / 一斗缶', raw => {
+    const u = normUnit(raw);
+    DB.units = DB.units || [];
+    if (!allUnits().includes(u)) DB.units.push(u);
+    save();
+    refreshUnitSelects(sel, u);
+    toast('単位「' + u + '」を追加したさ');
+  });
+}
+
+// 画面上の単位プルダウンを作り直す（選択中の値・id・data属性は保つ）
+function refreshUnitSelects(target, newVal) {
+  document.querySelectorAll('select.i-unit, #s-unit').forEach(s => {
+    const keep = (s === target) ? newVal : s.value;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = unitSelectHTML(keep, s.className);
+    const fresh = tmp.firstElementChild;
+    if (s.id) fresh.id = s.id;
+    Object.keys(s.dataset).forEach(k => fresh.dataset[k] = s.dataset[k]);
+    s.replaceWith(fresh);
+    if (fresh.dataset.ing != null) { DB.ingredients[+fresh.dataset.ing].unit = keep; save(); }
+  });
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return blank();
+    return Object.assign(blank(), JSON.parse(raw));
+  } catch (e) { return blank(); }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(DB)); }
+  catch (e) { toast('保存できんかったさ…\n写真が多い／大きいかも。写真を減らすか消してみて'); }
+}
+function today() { return new Date().toISOString().slice(0, 10); }
+
+/* ブラウザのポップアップ（alert/confirm/prompt）は環境によってブロックされるので、
+   画面内のトーストと確認ダイアログで代用する */
+let toastTimer = null;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.style.display = 'none', 3200);
+}
+let askCb = null, askIsText = false;
+function ask(msg, cb) {
+  askCb = cb; askIsText = false;
+  document.getElementById('ask-msg').textContent = msg;
+  document.getElementById('ask-input').classList.add('hide');
+  document.getElementById('ask-bg').style.display = 'flex';
+}
+// prompt() の代わり。入力された文字列を cb に渡す（空ならキャンセル扱い）
+function askText(msg, placeholder, cb) {
+  askCb = cb; askIsText = true;
+  document.getElementById('ask-msg').textContent = msg;
+  const inp = document.getElementById('ask-input');
+  inp.value = ''; inp.placeholder = placeholder || '';
+  inp.classList.remove('hide');
+  document.getElementById('ask-bg').style.display = 'flex';
+  setTimeout(() => inp.focus(), 50);
+}
+function askYes() {
+  const c = askCb, txt = document.getElementById('ask-input').value.trim(), isText = askIsText;
+  askNo();
+  if (!c) return;
+  if (isText) { if (txt) c(txt); } else c();
+}
+function askNo() { document.getElementById('ask-bg').style.display = 'none'; askCb = null; }
+function num(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmt(n) { return (Math.round(n * 100) / 100).toLocaleString(); }
+
+/* ========== タブ ========== */
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  ['daily','usage','stock','recipe','manual','data'].forEach(t =>
+    document.getElementById('p-' + t).classList.toggle('hide', t !== b.dataset.t));
+  if (b.dataset.t === 'stock') renderStock();
+  if (b.dataset.t === 'recipe') renderRecipeTab();
+  if (b.dataset.t === 'manual') renderManual();
+});
+
+/* ========== 貼り付けのパース ========== */
+const SKIP_WORDS = ['商品名', '合計', '総計', '小計', 'ABC', '出数', 'カテゴリ', '分類',
+  '単価', '金額', '粗利', '数量', '順位', 'メニュー名', '商品コード', '税抜', '税込'];
+
+// 1行をセルに割る。E-POSのCSV（"A, 商品名, 単価, 出数, 金額, ..."）と
+// タブ／空白区切りの両対応。金額の「18,900」を割らないよう、カンマ区切りは
+// 「カンマ＋空白」を優先する。先頭のABC区分（単独のA〜E）は落とす。
+function splitCells(line) {
+  let parts;
+  if (line.includes('\t')) parts = line.split('\t');
+  else if (/,[\s　]/.test(line)) parts = line.split(/,[\s　]+/);
+  else if (/\s{2,}|　/.test(line)) parts = line.split(/\s{2,}|　+/);
+  else if (line.includes(',')) parts = line.split(',');
+  else parts = line.split(/\s+/);
+  const cells = parts
+    .map(s => s.trim().replace(/^["'　]+|["'　]+$/g, '').trim())
+    .filter(c => c !== '');
+  if (cells.length && /^[A-EＡ-Ｅ]$/.test(cells[0])) cells.shift(); // 先頭のABCランクを除去
+  return cells;
+}
+
+// セルを数値に。カンマ・円・％などを外して数値化（ダメなら null）
+function cellNum(c) {
+  const x = String(c).replace(/,/g, '').replace(/[¥￥円個点本杯％%]/g, '');
+  return /^\d+(\.\d+)?$/.test(x) ? parseFloat(x) : null;
+}
+
+let parsed = [];
+
+function parsePaste() {
+  const txt = document.getElementById('d-paste').value;
+  const lines = txt.split(/\r?\n/);
+  const out = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (SKIP_WORDS.some(w => line.startsWith(w))) continue;
+    const cells = splitCells(line);
+    if (cells.length < 2) continue;
+    const name = cells[0];
+    if (!name || /^[\d.,\s%]+$/.test(name)) continue;
+    const nums = cells.slice(1).map(cellNum).filter(v => v !== null);
+    if (!nums.length) continue;
+    let qty;
+    if (nums.length >= 3) {
+      // E-POS商品別集計 [単価, 出数, 金額, 金額, 構成比] → 2番目が出数
+      const [tanka, suryo, kingaku] = nums;
+      qty = suryo;
+      // 検算：単価×出数≒金額 でなければ 金額÷単価 で救済
+      if (tanka && kingaku && Math.abs(tanka * suryo - kingaku) > Math.max(2, kingaku * 0.03)) {
+        const alt = kingaku / tanka;
+        if (Math.abs(alt - Math.round(alt)) < 0.05) qty = Math.round(alt);
+      }
+    } else {
+      qty = nums[0]; // 「商品名＋出数」だけの単純形式
+    }
+    if (qty == null) continue;
+    out.push({ name, qty });
+  }
+  // 同名はまとめる
+  const map = {};
+  out.forEach(r => map[r.name] = (map[r.name] || 0) + r.qty);
+  parsed = Object.keys(map).map(k => ({ name: k, qty: map[k] }));
+  renderParsed();
+}
+
+function addManualRow() { parsed.push({ name: '', qty: 0 }); renderParsed(); }
+
+function renderParsed() {
+  const tb = document.getElementById('d-rows');
+  document.getElementById('d-count').textContent = parsed.length + '品';
+  if (!parsed.length) {
+    tb.innerHTML = '<tr><td colspan="3" class="muted">まだ読み取ってないさ</td></tr>';
+    document.getElementById('d-warn').innerHTML = '';
+    return;
+  }
+  tb.innerHTML = parsed.map((r, i) => `
+    <tr>
+      <td><input value="${esc(r.name)}" oninput="parsed[${i}].name=this.value"></td>
+      <td class="num" style="width:78px"><input type="number" step="any" value="${r.qty}" style="text-align:right" oninput="parsed[${i}].qty=parseFloat(this.value)||0"></td>
+      <td style="width:38px"><button class="mini del" onclick="parsed.splice(${i},1);renderParsed()">×</button></td>
+    </tr>`).join('');
+  const miss = parsed.filter(r => !DB.recipes[r.name]).length;
+  document.getElementById('d-warn').innerHTML = miss
+    ? `<div class="warn">${miss}品はレシピ未登録さ。保存はできるけど、材料計算には出てこないよ。</div>` : '';
+}
+
+function saveDaily() {
+  const d = document.getElementById('d-date').value || today();
+  const rows = parsed.filter(r => r.name.trim());
+  if (!rows.length) { toast('中身が空っぽさ'); return; }
+  DB.days[d] = rows.map(r => ({ name: r.name.trim(), qty: r.qty }));
+  save();
+  renderHistory();
+  toast(d + ' の出数を ' + rows.length + '品 保存したさ！');
+}
+
+function renderHistory() {
+  const ds = Object.keys(DB.days).sort().reverse();
+  const el = document.getElementById('d-history');
+  if (!ds.length) { el.innerHTML = 'まだ無いさ'; return; }
+  el.innerHTML = ds.slice(0, 30).map(d => {
+    const tot = DB.days[d].reduce((a, r) => a + r.qty, 0);
+    return `<div style="padding:5px 0;border-bottom:1px solid #f0e9e0">
+      <b style="color:#2a2420">${d}</b> — ${DB.days[d].length}品 / 合計${fmt(tot)}点
+      <button class="mini" onclick="loadDay('${d}')">開く</button>
+      <button class="mini del" onclick="delDay('${d}')">削除</button></div>`;
+  }).join('');
+}
+function loadDay(d) {
+  document.getElementById('d-date').value = d;
+  parsed = DB.days[d].map(r => ({ ...r }));
+  renderParsed();
+  window.scrollTo(0, 0);
+}
+function delDay(d) {
+  ask(d + ' の出数を消すさ？', () => {
+    delete DB.days[d]; save(); renderHistory(); toast('消したさ');
+  });
+}
+
+/* ========== 材料使用量 ========== */
+let lastUsage = null;
+
+function setToday() {
+  document.getElementById('u-from').value = today();
+  document.getElementById('u-to').value = today();
+  calcUsage();
+}
+
+function calcUsage() {
+  const from = document.getElementById('u-from').value || today();
+  const to = document.getElementById('u-to').value || from;
+  const use = {};      // 材料名 -> 量
+  const detail = {};   // 材料名 -> [{menu, qty, amount}]
+  const missing = new Set();
+  let dayCount = 0;
+
+  Object.keys(DB.days).forEach(d => {
+    if (d < from || d > to) return;
+    dayCount++;
+    DB.days[d].forEach(r => {
+      const rec = DB.recipes[r.name];
+      if (!rec || !rec.length) { missing.add(r.name); return; }
+      rec.forEach(ing => {
+        const amt = num(ing.amount) * r.qty;
+        use[ing.name] = (use[ing.name] || 0) + amt;
+        (detail[ing.name] = detail[ing.name] || []).push({ menu: r.name, qty: r.qty, amount: amt });
+      });
+    });
+  });
+
+  lastUsage = { from, to, use };
+  const names = Object.keys(use).sort((a, b) => use[b] - use[a]);
+  const tb = document.getElementById('u-rows');
+  if (!names.length) {
+    tb.innerHTML = '<tr><td colspan="3" class="muted">対象データが無いさ（出数の保存とレシピ登録を確認してね）</td></tr>';
+  } else {
+    tb.innerHTML = names.map(n => {
+      const ing = DB.ingredients.find(i => i.name === n) || {};
+      const rest = num(ing.qty) - use[n];
+      const low = ing.name && rest <= num(ing.min);
+      return `<tr><td>${esc(n)}</td>
+        <td class="num"><b>${fmt(use[n])}</b> ${esc(ing.unit || '')}</td>
+        <td class="num" style="${low ? 'color:#b0402a;font-weight:700' : ''}">${ing.name ? fmt(rest) : '—'}</td></tr>`;
+    }).join('');
+  }
+  document.getElementById('u-warn').innerHTML =
+    `<div class="${missing.size ? 'warn' : 'ok'}">${dayCount}日ぶん集計したさ。` +
+    (missing.size ? `レシピ未登録：${[...missing].map(esc).join('、')}` : 'ぜんぶレシピ登録済み！') + '</div>';
+
+  document.getElementById('u-detail').innerHTML = names.length ? names.map(n =>
+    `<div style="margin-bottom:7px"><b style="color:#2a2420">${esc(n)}</b><br>` +
+    detail[n].map(x => `　${esc(x.menu)} ×${fmt(x.qty)} → ${fmt(x.amount)}`).join('<br>') + '</div>').join('') : '—';
+}
+
+function applyToStock() {
+  if (!lastUsage || !Object.keys(lastUsage.use).length) { toast('先に集計してね'); return; }
+  ask(lastUsage.from + '〜' + lastUsage.to + ' の使用量を在庫から引くさ？', () => {
+    let hit = 0;
+    Object.keys(lastUsage.use).forEach(n => {
+      const ing = DB.ingredients.find(i => i.name === n);
+      if (!ing) return;
+      ing.qty = num(ing.qty) - lastUsage.use[n];
+      hit++;
+    });
+    DB.log.unshift({
+      at: new Date().toLocaleString('ja-JP'), type: '消費',
+      text: `${lastUsage.from}〜${lastUsage.to} の使用量を${hit}材料ぶん差引`
+    });
+    save();
+    toast(hit + '材料の在庫を減らしたさ');
+    calcUsage();
+  });
+}
+
+/* ========== 在庫 ========== */
+function renderStock() {
+  const tb = document.getElementById('s-rows');
+  if (!DB.ingredients.length) {
+    tb.innerHTML = '<tr><td colspan="5" class="muted">まだ材料が無いさ。下から追加してね</td></tr>';
+  } else {
+    tb.innerHTML = DB.ingredients.map((g, i) => {
+      const low = num(g.qty) <= num(g.min);
+      return `<tr>
+        <td>${esc(g.name)}${low ? '<span class="pill red">要発注</span>' : ''}</td>
+        <td style="width:82px">${unitSelectHTML(g.unit || '', 'i-unit').replace('<select', `<select data-ing="${i}"`)}</td>
+        <td class="num" style="width:76px"><input type="number" step="any" value="${g.qty}" style="text-align:right" onchange="DB.ingredients[${i}].qty=parseFloat(this.value)||0;save();renderStock()"></td>
+        <td class="num" style="width:70px"><input type="number" step="any" value="${g.min}" style="text-align:right" onchange="DB.ingredients[${i}].min=parseFloat(this.value)||0;save()"></td>
+        <td style="width:38px"><button class="mini del" onclick="delIng(${i})">×</button></td>
+      </tr>`;
+    }).join('');
+  }
+  const low = DB.ingredients.filter(g => num(g.qty) <= num(g.min));
+  document.getElementById('s-alert').innerHTML = low.length
+    ? `<div class="alert">発注点を切ってる材料：${low.map(g => esc(g.name)).join('、')}</div>` : '';
+
+  document.getElementById('in-ing').innerHTML =
+    DB.ingredients.map(g => `<option>${esc(g.name)}</option>`).join('');
+
+  // 「材料を追加」フォームの単位プルダウン（選択中の値は残す）
+  const wrap = document.getElementById('s-unit-wrap');
+  const cur = wrap.querySelector('select') ? wrap.querySelector('select').value : '';
+  wrap.innerHTML = unitSelectHTML(cur, '').replace('<select', '<select id="s-unit"');
+
+  const lg = document.getElementById('s-log');
+  lg.innerHTML = DB.log.length ? DB.log.slice(0, 40).map(l =>
+    `<div style="padding:4px 0;border-bottom:1px solid #f0e9e0"><b style="color:#2a2420">${esc(l.type)}</b> ${esc(l.text)}<br><span style="font-size:11px">${esc(l.at)}</span></div>`).join('') : 'まだ無いさ';
+}
+
+function addIngredient() {
+  const name = document.getElementById('s-name').value.trim();
+  if (!name) { toast('材料名を入れてね'); return; }
+  if (DB.ingredients.some(g => g.name === name)) { toast('もうあるさ'); return; }
+  DB.ingredients.push({
+    name, unit: document.getElementById('s-unit').value.trim(),
+    qty: num(document.getElementById('s-qty').value), min: num(document.getElementById('s-min').value)
+  });
+  save();
+  document.getElementById('s-name').value = '';
+  document.getElementById('s-unit').value = '';
+  document.getElementById('s-qty').value = 0;
+  document.getElementById('s-min').value = 0;
+  renderStock();
+}
+function delIng(i) {
+  ask(DB.ingredients[i].name + ' を材料マスタから消すさ？', () => {
+    DB.ingredients.splice(i, 1); save(); renderStock(); toast('消したさ');
+  });
+}
+function addPurchase() {
+  const n = document.getElementById('in-ing').value;
+  const q = num(document.getElementById('in-qty').value);
+  const g = DB.ingredients.find(x => x.name === n);
+  if (!g || !q) { toast('材料と数量を確認してね'); return; }
+  g.qty = num(g.qty) + q;
+  DB.log.unshift({ at: new Date().toLocaleString('ja-JP'), type: '入庫', text: `${n} ＋${fmt(q)}${g.unit || ''}` });
+  save();
+  document.getElementById('in-qty').value = '';
+  renderStock();
+}
+
+/* ========== レシピ ========== */
+function renderRecipeTab() {
+  const menus = new Set([...Object.keys(DB.recipes), ...(DB.menus || [])]);
+  Object.values(DB.days).forEach(rows => rows.forEach(r => menus.add(r.name)));
+  const sel = document.getElementById('r-menu');
+  const cur = sel.value;
+  sel.innerHTML = [...menus].sort().map(m =>
+    `<option${DB.recipes[m] ? '' : ' style="color:#b0402a"'}>${esc(m)}</option>`).join('');
+  if (cur && menus.has(cur)) sel.value = cur;
+  document.getElementById('ing-list').innerHTML =
+    DB.ingredients.map(g => `<option value="${esc(g.name)}">`).join('');
+  loadRecipe();
+
+  const keys = Object.keys(DB.recipes).sort();
+  document.getElementById('r-count').textContent = keys.length;
+  document.getElementById('r-list').innerHTML = keys.length ? keys.map(k =>
+    `<div style="padding:5px 0;border-bottom:1px solid #f0e9e0">
+      <b style="color:#2a2420">${esc(k)}</b>：${DB.recipes[k].map(i => esc(i.name) + ' ' + i.amount + esc(i.unit || unitOf(i.name))).join(' ／ ')}
+      <button class="mini del" onclick="delRecipe('${esc(k).replace(/'/g,"\\'")}')">削除</button></div>`).join('') : 'まだ無いさ';
+
+  const miss = [...menus].filter(m => !DB.recipes[m]);
+  document.getElementById('r-missing').innerHTML = miss.length ? miss.map(m => {
+    const q = esc(m).replace(/'/g, "\\'");
+    return `<span style="display:inline-flex;margin:2px">
+      <button class="mini" style="border-radius:7px 0 0 7px" onclick="pickMenu('${q}')">${esc(m)}</button>
+      <button class="mini del" style="border-radius:0 7px 7px 0;padding:5px 6px" onclick="delMenu('${q}')">×</button>
+    </span>`;
+  }).join('') : 'ぜんぶ登録済みさ！';
+}
+
+/* E-POSの商品一覧を貼り付けて商品名だけ取り込む */
+function importMenus() {
+  const lines = document.getElementById('m-paste').value.split(/\r?\n/);
+  const found = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (SKIP_WORDS.some(w => line.startsWith(w))) continue;
+    const cells = splitCells(line);
+    if (!cells.length) continue;
+    // 先頭が商品コード（数字だけ）なら次のセルを商品名とみなす
+    let name = cells[0];
+    if (/^[\d,.-]+$/.test(name) && cells.length > 1) name = cells[1];
+    name = name.replace(/^["'　]+|["'　]+$/g, '').trim();
+    if (!name || /^[\d,.\s-]+$/.test(name)) continue;
+    if (name.length > 40) continue;
+    found.push(name);
+  }
+  const uniq = [...new Set(found)];
+  const known = new Set([...(DB.menus || []), ...Object.keys(DB.recipes)]);
+  Object.values(DB.days).forEach(rows => rows.forEach(r => known.add(r.name)));
+  const added = uniq.filter(n => !known.has(n));
+
+  DB.menus = [...new Set([...(DB.menus || []), ...uniq])];
+  save();
+  renderRecipeTab();
+
+  document.getElementById('m-result').innerHTML = uniq.length
+    ? `<div class="${added.length ? 'ok' : 'warn'}" style="margin-top:10px">
+        ${uniq.length}件よみとって、${added.length}件を新しく登録したさ。
+        ${added.length ? '<br>' + added.slice(0, 30).map(esc).join('、') + (added.length > 30 ? ' ほか' : '') : '（ぜんぶ登録済みだった）'}
+       </div>`
+    : `<div class="warn" style="margin-top:10px">商品名が見つからんかったさ。貼り付けた中身を確認してね</div>`;
+}
+
+function delMenu(m) {
+  ask(m + ' をメニューから外すさ？（レシピも消えるよ）', () => {
+    DB.menus = (DB.menus || []).filter(x => x !== m);
+    delete DB.recipes[m];
+    save(); renderRecipeTab(); toast('外したさ');
+  });
+}
+
+function pickMenu(m) {
+  document.getElementById('r-menu').value = m;
+  loadRecipe();
+  window.scrollTo(0, 0);
+}
+
+function newMenuName() {
+  const box = document.getElementById('r-new');
+  const n = box.value.trim();
+  if (!n) { toast('商品名を入れてね'); box.focus(); return; }
+  const sel = document.getElementById('r-menu');
+  if (![...sel.options].some(o => o.value === n)) sel.add(new Option(n, n));
+  sel.value = n;
+  box.value = '';
+  loadRecipe();
+  toast('「' + n + '」を作ったさ。下に材料を入れてね');
+}
+
+function unitOf(name) {
+  const g = DB.ingredients.find(x => x.name === name);
+  return g ? (g.unit || '') : '';
+}
+
+function addIngLine(name, amount, unit) {
+  const div = document.createElement('div');
+  div.className = 'ing-line';
+  div.innerHTML = `<input list="ing-list" class="i-name" placeholder="材料名" value="${name ? esc(name) : ''}"
+      oninput="syncUnit(this)">
+    <input type="number" step="any" class="i-amt" placeholder="量" value="${amount != null ? amount : ''}">
+    ${unitSelectHTML(unit != null ? unit : (name ? unitOf(name) : ''), 'i-unit')}
+    <button class="mini del" onclick="this.parentNode.remove()">×</button>`;
+  document.getElementById('r-lines').appendChild(div);
+}
+
+// 既存の材料名を打ったら単位を自動で埋める
+function syncUnit(inp) {
+  const u = unitOf(inp.value.trim());
+  const box = inp.parentNode.querySelector('.i-unit');
+  if (u) box.value = u;
+}
+
+function loadRecipe() {
+  const m = document.getElementById('r-menu').value;
+  const box = document.getElementById('r-lines');
+  box.innerHTML = '';
+  const rec = DB.recipes[m];
+  if (rec && rec.length) rec.forEach(i => addIngLine(i.name, i.amount, i.unit));
+  else addIngLine();
+  // マニュアル（作り方・注意・写真）を読み込む
+  const man = (DB.manuals || {})[m] || {};
+  document.getElementById('r-steps').value = man.steps || '';
+  document.getElementById('r-notes').value = man.notes || '';
+  curPhoto = man.photo || '';
+  renderPhotoPreview();
+}
+
+/* ---- マニュアル用の写真 ---- */
+let curPhoto = '';
+// 選んだ写真を長辺900pxまで縮小してJPEG化（localStorageを軽く保つ）
+function readPhoto(file, cb) {
+  const r = new FileReader();
+  r.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 900;
+      let w = img.width, h = img.height;
+      if (Math.max(w, h) > max) { const s = max / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(c.toDataURL('image/jpeg', 0.72));
+    };
+    img.onerror = () => toast('この画像は読めなかったさ');
+    img.src = e.target.result;
+  };
+  r.readAsDataURL(file);
+}
+function pickPhoto(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  readPhoto(f, url => { curPhoto = url; renderPhotoPreview(); });
+  input.value = '';
+}
+function renderPhotoPreview() {
+  const w = document.getElementById('r-photo-wrap');
+  w.innerHTML = curPhoto
+    ? `<img src="${curPhoto}" style="max-width:100%;max-height:180px;border-radius:8px;display:block;margin-bottom:6px">
+       <button class="mini del" onclick="curPhoto='';renderPhotoPreview()">写真を消す</button>`
+    : '<span class="muted">まだ無いさ</span>';
+}
+
+function saveRecipe() {
+  const m = document.getElementById('r-menu').value;
+  if (!m) { toast('商品を選んでね'); return; }
+  const lines = [...document.querySelectorAll('#r-lines .ing-line')].map(d => ({
+    name: d.querySelector('.i-name').value.trim(),
+    amount: num(d.querySelector('.i-amt').value),
+    unit: d.querySelector('.i-unit').value.trim()
+  })).filter(x => x.name && x.amount);
+
+  const steps = document.getElementById('r-steps').value.trim();
+  const notes = document.getElementById('r-notes').value.trim();
+  const hasManual = steps || notes || curPhoto;
+  if (!lines.length && !hasManual) { toast('材料か、作り方・写真のどれかを入れてね'); return; }
+
+  // 新しい材料は材料マスタに自動登録
+  const added = [];
+  lines.forEach(l => {
+    const g = DB.ingredients.find(x => x.name === l.name);
+    if (!g) { DB.ingredients.push({ name: l.name, unit: l.unit, qty: 0, min: 0 }); added.push(l.name); }
+    else if (!g.unit && l.unit) g.unit = l.unit;
+  });
+
+  if (lines.length) DB.recipes[m] = lines;
+  // マニュアル（作り方・注意・写真）
+  DB.manuals = DB.manuals || {};
+  if (hasManual) DB.manuals[m] = { steps, notes, photo: curPhoto };
+  else delete DB.manuals[m];
+  // 商品名を控えに残す（材料なし・マニュアルだけでも消えないように）
+  DB.menus = [...new Set([...(DB.menus || []), m])];
+
+  save();
+  renderRecipeTab();
+  toast(m + ' を保存したさ！' +
+    (lines.length ? '' : '（材料なし・マニュアルだけ）') +
+    (added.length ? '\n材料マスタに新規追加：' + added.join('、') + '\n（在庫タブで在庫数を入れてね）' : ''));
+}
+
+/* ========== マニュアル表示 ========== */
+function renderManual() {
+  const q = (document.getElementById('man-search').value || '').trim();
+  const menus = [...new Set([...Object.keys(DB.recipes), ...Object.keys(DB.manuals || {})])].sort();
+  const shown = menus.filter(m => !q || m.includes(q));
+  document.getElementById('man-count').textContent = menus.length;
+  const box = document.getElementById('man-list');
+  if (!shown.length) {
+    box.innerHTML = '<div class="card muted">' +
+      (menus.length ? '該当なしさ' : 'まだ無いさ。「レシピ」タブで商品に材料や作り方を入れると、ここに出るよ') + '</div>';
+    return;
+  }
+  box.innerHTML = shown.map(m => {
+    const rec = DB.recipes[m] || [];
+    const man = (DB.manuals || {})[m] || {};
+    const ings = rec.length
+      ? rec.map(i => `<li>${esc(i.name)} <b>${fmt(i.amount)}</b>${esc(i.unit || unitOf(i.name))}</li>`).join('') : '';
+    const q = esc(m).replace(/'/g, "\\'");
+    return `<div class="card m-card">
+      <h3>${esc(m)}</h3>
+      ${man.photo ? `<img class="m-photo" src="${man.photo}">` : ''}
+      ${ings ? `<div class="m-sec"><b>材料・分量（1食ぶん）</b><ul class="m-ings">${ings}</ul></div>` : ''}
+      ${man.steps ? `<div class="m-sec"><b>作り方・仕込み</b><div class="m-steps">${esc(man.steps)}</div></div>` : ''}
+      ${man.notes ? `<div class="m-sec"><b>盛り付け・提供の注意</b><div class="m-steps">${esc(man.notes)}</div></div>` : ''}
+      <button class="mini no-print" style="margin-top:9px" onclick="editManual('${q}')">✏ この商品を編集</button>
+    </div>`;
+  }).join('');
+}
+function editManual(m) {
+  document.querySelector('.tab[data-t="recipe"]').click();
+  const sel = document.getElementById('r-menu');
+  if (![...sel.options].some(o => o.value === m)) sel.add(new Option(m, m));
+  sel.value = m;
+  loadRecipe();
+  window.scrollTo(0, 0);
+}
+
+function delRecipe(k) {
+  ask(k + ' のレシピを消すさ？', () => {
+    delete DB.recipes[k]; save(); renderRecipeTab(); toast('消したさ');
+  });
+}
+
+/* ========== データ ========== */
+function exportData() { document.getElementById('io-box').value = JSON.stringify(DB); }
+function copyBox() {
+  const b = document.getElementById('io-box'); b.select();
+  navigator.clipboard.writeText(b.value).then(() => toast('コピーしたさ'), () => document.execCommand('copy'));
+}
+function importData() {
+  let d;
+  try { d = JSON.parse(document.getElementById('io-box').value); }
+  catch (e) { toast('中身が読めなかったさ'); return; }
+  ask('今のデータを、貼り付けた内容で上書きするさ？', () => {
+    DB = Object.assign(blank(), d); save(); redrawAll(); toast('読み込んださ！');
+  });
+}
+function loadSample() {
+  const ings = [
+    ['豚バラ', '本', 120, 40], ['鶏もも', 'g', 5000, 2000], ['やげん軟骨', 'g', 2000, 800],
+    ['キャベツ', '玉', 6, 2], ['レモン', '個', 20, 5], ['焼酎', 'ml', 4000, 1000],
+    ['生ビール樽', 'L', 30, 10], ['みょうが', '本', 40, 10], ['トマト', '個', 30, 8]
+  ];
+  ings.forEach(([name, unit, qty, min]) => {
+    if (!DB.ingredients.some(g => g.name === name)) DB.ingredients.push({ name, unit, qty, min });
+  });
+  Object.assign(DB.recipes, {
+    '豚バラ串': [{ name: '豚バラ', amount: 1 }],
+    'やげん軟骨': [{ name: 'やげん軟骨', amount: 60 }],
+    'トマトのお浸し': [{ name: 'トマト', amount: 1 }, { name: 'みょうが', amount: 1 }],
+    'オリオン生': [{ name: '生ビール樽', amount: 0.35 }],
+    'レモンサワー': [{ name: '焼酎', amount: 45 }, { name: 'レモン', amount: 0.25 }]
+  });
+  save(); redrawAll(); toast('サンプル入れたさ！「レシピ」タブ見てみて');
+}
+function wipe() {
+  ask('ほんとに全部消すさ？戻せないよ', () => {
+    DB = blank(); save(); redrawAll(); toast('全部消したさ');
+  });
+}
+
+/* ========== 起動 ========== */
+function redrawAll() { normalizeAllUnits(); renderParsed(); renderHistory(); renderStock(); renderRecipeTab(); renderManual(); }
+document.getElementById('d-date').value = today();
+document.getElementById('u-from').value = today();
+document.getElementById('u-to').value = today();
+redrawAll();
+</script>
+</body>
+</html>

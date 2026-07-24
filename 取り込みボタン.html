@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-POS取り込みボタンの入れ方 - 煙屋在庫</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:"Segoe UI","Meiryo",sans-serif; margin:0 auto; padding:14px; max-width:720px; background:#f5f2ee; color:#2a2420; line-height:1.6; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .sub { color:#8a7f76; font-size:13px; margin-bottom:14px; }
+  .card { background:#fff; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px; }
+  .card h2 { font-size:16px; margin:0 0 10px; color:#4a4038; }
+  .bm { display:inline-block; background:#c9622f; color:#fff !important; text-decoration:none; padding:12px 22px; border-radius:10px; font-size:16px; font-weight:700; box-shadow:0 2px 6px rgba(201,98,47,.4); }
+  .step { margin:0 0 8px; padding-left:26px; position:relative; }
+  .step b.n { position:absolute; left:0; top:0; background:#4a4038; color:#fff; width:20px; height:20px; border-radius:50%; font-size:12px; text-align:center; line-height:20px; font-weight:700; }
+  code { background:#efe7dc; padding:2px 6px; border-radius:5px; font-size:13px; word-break:break-all; }
+  .note { background:#fff6ed; border-left:4px solid #e08a3c; padding:10px 12px; border-radius:6px; font-size:13px; margin-top:10px; }
+  button.copy { background:#6a5f56; color:#fff; border:none; border-radius:9px; padding:11px 16px; font-size:15px; font-weight:600; cursor:pointer; width:100%; }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; }
+  .tb { flex:1; padding:10px; border:none; border-radius:10px; background:#e7ddd0; color:#6a5f56; font-weight:600; font-size:15px; cursor:pointer; }
+  .tb.on { background:#4a4038; color:#fff; }
+  .hide { display:none; }
+  textarea { width:100%; min-height:90px; font-family:monospace; font-size:11px; border:1px solid #ddd4cb; border-radius:8px; padding:8px; margin-top:8px; }
+  .flow { background:#eef4f6; border-radius:10px; padding:12px; font-size:14px; }
+  .flow b { color:#2a6b7c; }
+</style>
+</head>
+<body>
+
+<h1>📋 E-POS取り込みボタン</h1>
+<div class="sub">串焼KEMURI屋 ／ 集計表をワンタップで在庫アプリへ</div>
+
+<div class="card">
+  <h2>これは何？</h2>
+  <div class="flow">
+    E-POSの<b>「商品別商品集計」</b>を開いてこのボタンを押す<br>
+    　↓<br>
+    商品名と出数を<b>自動で読み取ってコピー</b><br>
+    　↓<br>
+    在庫アプリの「今日の出数」に<b>貼り付けるだけ</b>
+  </div>
+  <div class="note">今までの「表を選んでコピー」の手間が要らなくなるさ。ボタン一発で全商品ぶんコピーできる。</div>
+</div>
+
+<div class="tabs">
+  <button class="tb" data-k="pc">パソコン</button>
+  <button class="tb on" data-k="sp">スマホ</button>
+</div>
+
+<!-- ===== PC ===== -->
+<div id="pc" class="hide">
+  <div class="card">
+    <h2>パソコンでの入れ方</h2>
+    <div class="step"><b class="n">1</b> ブラウザの<b>ブックマークバー</b>を表示する（<code>Ctrl+Shift+B</code> で出る）</div>
+    <div class="step"><b class="n">2</b> 下のオレンジのボタンを、ブックマークバーに<b>ドラッグ＆ドロップ</b>する</div>
+    <div style="text-align:center; margin:16px 0;">
+      <a class="bm" id="bm-link" href="#">🔥 煙屋在庫へ取り込む</a>
+    </div>
+    <div class="step"><b class="n">3</b> E-POSで「商品別商品集計」を抽出したら、いま入れた<b>ブックマークをクリック</b></div>
+    <div class="step"><b class="n">4</b> 「◯品コピーしたさ！」と出たら成功。在庫アプリを開いて貼り付け→読み取る</div>
+    <div class="note">ドラッグできないときは「スマホ」タブの手順（コードをコピーしてブックマークのURLに貼る）でもPCで入れられるさ。</div>
+  </div>
+</div>
+
+<!-- ===== スマホ ===== -->
+<div id="sp">
+  <div class="card">
+    <h2>スマホでの入れ方（iPhone / Android）</h2>
+    <div class="sub">スマホはドラッグできないから、ちょっとだけ手順があるさ。一度入れれば次からは一発。</div>
+    <div class="step"><b class="n">1</b> 下のボタンで<b>コードをコピー</b></div>
+    <button class="copy" onclick="copyCode()">📋 ボタンのコードをコピー</button>
+    <textarea id="code" readonly onclick="this.select()"></textarea>
+    <div class="step"><b class="n">2</b> このページを<b>ブックマーク（お気に入り）に追加</b>する</div>
+    <div class="step"><b class="n">3</b> 追加したブックマークを<b>編集</b>して、名前を「<b>煙屋在庫へ</b>」に、<b>URL欄を全部消して</b>さっきコピーしたコードを<b>貼り付け</b>て保存</div>
+    <div class="step"><b class="n">4</b> E-POSで集計表を開いて、アドレスバーに「煙屋在庫」と打つ→出てきたブックマークを選ぶと実行される</div>
+    <div class="note">
+      <b>iPhone(Safari)のコツ：</b> ブックマーク編集画面でURL欄を長押し→ペースト。<br>
+      <b>Androidのコツ：</b> Chromeのブックマーク編集でURLを貼り付け。<br>
+      うまくいかんかったら、いつも通り集計表を長押しコピー→在庫アプリに貼る方式でもOKさ。
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>読み取れなかったら</h2>
+  E-POSの画面の作りによっては、そのままだと拾えないことがあるさ。そのときは<b>「◯品コピーしたさ」の表示が出た画面のスクショ</b>か、<b>集計表の実際の見た目</b>を教えて。表の形に合わせて調整するよ。
+</div>
+
+<script>
+// 圧縮版ブックマークレット（bookmarklet-source.js と同じ中身）
+var BM = "javascript:(function(){try{var n=function(s){return(s||'').replace(/\\s+/g,' ').trim()},N=function(s){return/^\\d+(\\.\\d+)?$/.test((s||'').replace(/[,\\s]/g,''))},T=function(s){return(s||'').replace(/[,\\s]/g,'')};var ds=[document];[].slice.call(document.querySelectorAll('iframe,frame')).forEach(function(f){try{if(f.contentDocument)ds.push(f.contentDocument)}catch(e){}});var ts=[];ds.forEach(function(d){ts=ts.concat([].slice.call(d.querySelectorAll('table')))});var p=null,ps=-1;ts.forEach(function(t){var x=n(t.textContent),r=t.querySelectorAll('tr').length,s=r;if(/商品名|メニュー|品名/.test(x))s+=1000;if(/出数|数量|杯数|個数/.test(x))s+=1000;if(s>ps){ps=s;p=t}});var o=[];if(p&&ps>=0){var rs=[].slice.call(p.querySelectorAll('tr')),nc=-1,qc=-1,hr=-1;for(var i=0;i<Math.min(4,rs.length);i++){[].slice.call(rs[i].querySelectorAll('th,td')).forEach(function(c,idx){var t=n(c.textContent).replace(/\\s/g,'');if(nc<0&&/商品名|メニュー名?|品名/.test(t))nc=idx;if(qc<0&&/出数|数量|杯数|個数|販売数/.test(t))qc=idx});if(nc>=0&&qc>=0){hr=i;break}}rs.forEach(function(r,ri){if(ri<=hr)return;var c=[].slice.call(r.querySelectorAll('td'));if(!c.length)return;var nm=n((c[nc>=0?nc:0]||{}).textContent);if(nc<0&&/^[ABC]$/.test(nm)&&c[1])nm=n(c[1].textContent);if(!nm||/合計|総計|小計|計$/.test(nm))return;if(N(nm))return;var q='';if(qc>=0&&c[qc])q=T(c[qc].textContent);if(!N(q)){for(var k=0;k<c.length;k++){var v=T(c[k].textContent);if(N(v)&&n(c[k].textContent)!==nm){q=v;break}}}if(!N(q))return;o.push(nm+'\\t'+q)})}if(!o.length){var at=ds.map(function(d){return(d.body&&d.body.innerText)||''}).join('\\n');at.split(/\\r?\\n/).forEach(function(raw){var l=n(raw);if(!l||/商品名|合計|総計|小計|カテゴリ|単価|金額|構成比/.test(l))return;var c=l.split(/\\t|,\\s*|\\s{2,}/).map(n).filter(Boolean);if(c.length<2)c=l.split(/\\s+/);if(c[0]&&/^[ABC]$/.test(c[0]))c.shift();var nm=c[0];if(!nm||N(nm)||/合計|総計|小計/.test(nm))return;var nu=c.slice(1).map(T).filter(N);if(!nu.length)return;var q=nu.length>=3?nu[1]:nu[0];o.push(nm+'\\t'+q)})}if(!o.length){alert('データが読み取れんかったさ。「商品別商品集計」を抽出した表のページで押してね。');return}var tx=o.join('\\n'),d=function(){alert(o.length+'品コピーしたさ！在庫アプリの「今日の出数」に貼り付け→読み取るしてね。')};function lg(){var ta=document.createElement('textarea');ta.value=tx;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');d()}catch(e){window.prompt('コピーして在庫アプリに貼ってね',tx)}ta.remove()}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(d,lg)}else lg()}catch(e){alert('エラー: '+(e&&e.message?e.message:e))}})();";
+document.getElementById('bm-link').setAttribute('href', BM);
+document.getElementById('code').value = BM;
+
+document.querySelectorAll('.tb').forEach(function(b){ b.onclick=function(){
+  document.querySelectorAll('.tb').forEach(function(x){x.classList.remove('on')});
+  b.classList.add('on');
+  document.getElementById('pc').classList.toggle('hide', b.dataset.k!=='pc');
+  document.getElementById('sp').classList.toggle('hide', b.dataset.k!=='sp');
+};});
+
+function copyCode(){
+  var t=document.getElementById('code'); t.select();
+  navigator.clipboard.writeText(t.value).then(
+    function(){ alert('コードをコピーしたさ！ブックマークのURL欄に貼ってね'); },
+    function(){ document.execCommand('copy'); alert('コピーしたさ！'); }
+  );
+}
+document.getElementById('bm-link').addEventListener('click', function(e){
+  e.preventDefault();
+  alert('このボタンは「ブックマークバーにドラッグ」して使うさ。押すだけじゃE-POSの表は読めんよ〜');
+});
+</script>
+</body>
+</html>
