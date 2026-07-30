@@ -203,6 +203,7 @@
       <div style="flex:2"><label>材料名</label><input id="s-name" placeholder="豚バラ"></div>
       <div><label>単位</label><span id="s-unit-wrap"></span></div>
     </div>
+    <div class="gap"><label>ジャンル</label><span id="s-genre-wrap"></span></div>
     <div class="row gap">
       <div><label>現在庫</label><input id="s-qty" type="number" step="any" value="0"></div>
       <div><label>発注点</label><input id="s-min" type="number" step="any" value="0"></div>
@@ -317,7 +318,7 @@ const KEY = 'kemuri_zaiko_v1';
 let DB = load();
 
 function blank() {
-  return { ingredients: [], recipes: {}, days: {}, log: [], units: [], menus: [], manuals: {} };
+  return { ingredients: [], recipes: {}, days: {}, log: [], units: [], menus: [], manuals: {}, genres: [] };
 }
 
 /* ========== 単位 ========== */
@@ -399,6 +400,58 @@ function refreshUnitSelects(target, newVal) {
     if (fresh.dataset.ing != null) { DB.ingredients[+fresh.dataset.ing].unit = keep; save(); }
   });
 }
+
+/* ========== ジャンル（材料の分類） ========== */
+const GENRES = ['野菜', '肉', '魚介', '玉子・豆腐', '練物・加工', '乾物・粉', '米・麺',
+  '調味料・油', 'ドリンク', '酒', 'その他'];
+
+// 既定のジャンル ＋ 自分で足したもの ＋ すでに使ってるもの
+function allGenres() {
+  const s = [...GENRES, ...(DB.genres || [])];
+  DB.ingredients.forEach(g => { if (g.genre) s.push(g.genre); });
+  return [...new Set(s.filter(Boolean))];
+}
+function genreOf(name) {
+  const g = DB.ingredients.find(x => x.name === name);
+  return g ? (g.genre || '') : '';
+}
+function genreSelectHTML(selected, cls) {
+  const opts = allGenres().map(u =>
+    `<option${u === selected ? ' selected' : ''}>${esc(u)}</option>`).join('');
+  return `<select class="${cls}" onchange="genreChanged(this)">
+    <option value=""${selected ? '' : ' selected'}>未分類</option>${opts}
+    <option value="__newg__">＋ ジャンル追加…</option></select>`;
+}
+let genrePrev = '';
+function genreChanged(sel) {
+  if (sel.value !== '__newg__') {
+    genrePrev = sel.value;
+    if (sel.dataset.ing != null) { DB.ingredients[+sel.dataset.ing].genre = sel.value; save(); }
+    return;
+  }
+  sel.value = genrePrev;
+  askText('新しいジャンルを入れてね', '例）薬味 / デザート / 揚げ物', raw => {
+    const u = raw.trim();
+    DB.genres = DB.genres || [];
+    if (!allGenres().includes(u)) DB.genres.push(u);
+    save();
+    refreshGenreSelects(sel, u);
+    toast('ジャンル「' + u + '」を追加したさ');
+  });
+}
+function refreshGenreSelects(target, newVal) {
+  document.querySelectorAll('select.i-genre, #s-genre').forEach(s => {
+    const keep = (s === target) ? newVal : s.value;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = genreSelectHTML(keep, s.className);
+    const fresh = tmp.firstElementChild;
+    if (s.id) fresh.id = s.id;
+    Object.keys(s.dataset).forEach(k => fresh.dataset[k] = s.dataset[k]);
+    s.replaceWith(fresh);
+    if (fresh.dataset.ing != null) { DB.ingredients[+fresh.dataset.ing].genre = keep; save(); }
+  });
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -619,14 +672,35 @@ function calcUsage() {
   if (!names.length) {
     tb.innerHTML = '<tr><td colspan="3" class="muted">対象データが無いさ（出数の保存とレシピ登録を確認してね）</td></tr>';
   } else {
-    tb.innerHTML = names.map(n => {
-      const ing = DB.ingredients.find(i => i.name === n) || {};
-      const rest = num(ing.qty) - use[n];
-      const low = ing.name && rest <= num(ing.min);
-      return `<tr><td>${esc(n)}</td>
-        <td class="num"><b>${fmt(use[n])}</b> ${esc(ing.unit || '')}</td>
-        <td class="num" style="${low ? 'color:#b0402a;font-weight:700' : ''}">${ing.name ? fmt(rest) : '—'}</td></tr>`;
-    }).join('');
+    // ジャンルごとにまとめる（既定ジャンルの順番→未分類は最後）
+    const byGenre = {};
+    names.forEach(n => { const g = genreOf(n); (byGenre[g] = byGenre[g] || []).push(n); });
+    const order = allGenres().filter(g => byGenre[g]);
+    Object.keys(byGenre).forEach(g => { if (g && !order.includes(g)) order.push(g); });
+    if (byGenre['']) order.push(''); // 未分類は最後
+    let html = '';
+    order.forEach(g => {
+      const label = g || '未分類';
+      // ジャンル小計（同じ単位ごとにまとめる）
+      const unitSums = {};
+      byGenre[g].forEach(n => {
+        const ing = DB.ingredients.find(i => i.name === n) || {};
+        const u = ing.unit || '';
+        unitSums[u] = (unitSums[u] || 0) + use[n];
+      });
+      const sumStr = Object.keys(unitSums).map(u => fmt(unitSums[u]) + (u || '')).join(' ・ ');
+      html += `<tr><td colspan="3" style="background:#efe7dc;font-weight:700;color:#4a4038;padding:7px 8px;border-radius:6px">
+        🏷 ${esc(label)} <span class="muted" style="font-weight:400">(${byGenre[g].length}品 / 計 ${sumStr})</span></td></tr>`;
+      byGenre[g].forEach(n => {
+        const ing = DB.ingredients.find(i => i.name === n) || {};
+        const rest = num(ing.qty) - use[n];
+        const low = ing.name && rest <= num(ing.min);
+        html += `<tr><td style="padding-left:12px">${esc(n)}</td>
+          <td class="num"><b>${fmt(use[n])}</b> ${esc(ing.unit || '')}</td>
+          <td class="num" style="${low ? 'color:#b0402a;font-weight:700' : ''}">${ing.name ? fmt(rest) : '—'}</td></tr>`;
+      });
+    });
+    tb.innerHTML = html;
   }
   document.getElementById('u-warn').innerHTML =
     `<div class="${missing.size ? 'warn' : 'ok'}">${dayCount}日ぶん集計したさ。` +
@@ -666,7 +740,9 @@ function renderStock() {
     tb.innerHTML = DB.ingredients.map((g, i) => {
       const low = num(g.qty) <= num(g.min);
       return `<tr>
-        <td>${esc(g.name)}${low ? '<span class="pill red">要発注</span>' : ''}</td>
+        <td>${esc(g.name)}${low ? '<span class="pill red">要発注</span>' : ''}
+          <div style="margin-top:3px">${genreSelectHTML(g.genre || '', 'i-genre').replace('<select', `<select data-ing="${i}" style="padding:4px 6px;font-size:12px;background:#faf7f3;width:auto;max-width:100%"`)}</div>
+        </td>
         <td style="width:82px">${unitSelectHTML(g.unit || '', 'i-unit').replace('<select', `<select data-ing="${i}"`)}</td>
         <td class="num" style="width:76px"><input type="number" step="any" value="${g.qty}" style="text-align:right" onchange="DB.ingredients[${i}].qty=parseFloat(this.value)||0;save();renderStock()"></td>
         <td class="num" style="width:70px"><input type="number" step="any" value="${g.min}" style="text-align:right" onchange="DB.ingredients[${i}].min=parseFloat(this.value)||0;save()"></td>
@@ -686,6 +762,11 @@ function renderStock() {
   const cur = wrap.querySelector('select') ? wrap.querySelector('select').value : '';
   wrap.innerHTML = unitSelectHTML(cur, '').replace('<select', '<select id="s-unit"');
 
+  // 「材料を追加」フォームのジャンルプルダウン（選択中の値は残す）
+  const gw = document.getElementById('s-genre-wrap');
+  const gcur = gw.querySelector('select') ? gw.querySelector('select').value : '';
+  gw.innerHTML = genreSelectHTML(gcur, '').replace('<select', '<select id="s-genre"');
+
   const lg = document.getElementById('s-log');
   lg.innerHTML = DB.log.length ? DB.log.slice(0, 40).map(l =>
     `<div style="padding:4px 0;border-bottom:1px solid #f0e9e0"><b style="color:#2a2420">${esc(l.type)}</b> ${esc(l.text)}<br><span style="font-size:11px">${esc(l.at)}</span></div>`).join('') : 'まだ無いさ';
@@ -697,6 +778,7 @@ function addIngredient() {
   if (DB.ingredients.some(g => g.name === name)) { toast('もうあるさ'); return; }
   DB.ingredients.push({
     name, unit: document.getElementById('s-unit').value.trim(),
+    genre: (document.getElementById('s-genre') || {}).value || '',
     qty: num(document.getElementById('s-qty').value), min: num(document.getElementById('s-min').value)
   });
   save();
@@ -982,12 +1064,12 @@ function importData() {
 }
 function loadSample() {
   const ings = [
-    ['豚バラ', '本', 120, 40], ['鶏もも', 'g', 5000, 2000], ['やげん軟骨', 'g', 2000, 800],
-    ['キャベツ', '玉', 6, 2], ['レモン', '個', 20, 5], ['焼酎', 'ml', 4000, 1000],
-    ['生ビール樽', 'L', 30, 10], ['みょうが', '本', 40, 10], ['トマト', '個', 30, 8]
+    ['豚バラ', '本', 120, 40, '肉'], ['鶏もも', 'g', 5000, 2000, '肉'], ['やげん軟骨', 'g', 2000, 800, '肉'],
+    ['キャベツ', '玉', 6, 2, '野菜'], ['レモン', '個', 20, 5, '野菜'], ['焼酎', 'ml', 4000, 1000, '酒'],
+    ['生ビール樽', 'L', 30, 10, '酒'], ['みょうが', '本', 40, 10, '野菜'], ['トマト', '個', 30, 8, '野菜']
   ];
-  ings.forEach(([name, unit, qty, min]) => {
-    if (!DB.ingredients.some(g => g.name === name)) DB.ingredients.push({ name, unit, qty, min });
+  ings.forEach(([name, unit, qty, min, genre]) => {
+    if (!DB.ingredients.some(g => g.name === name)) DB.ingredients.push({ name, unit, qty, min, genre });
   });
   Object.assign(DB.recipes, {
     '豚バラ串': [{ name: '豚バラ', amount: 1 }],
@@ -1010,6 +1092,15 @@ document.getElementById('d-date').value = today();
 document.getElementById('u-from').value = today();
 document.getElementById('u-to').value = today();
 redrawAll();
+
+// 貼り付けたら自動で読み取る（ボタンを押す手間を省く）
+document.getElementById('d-paste').addEventListener('paste', function () {
+  setTimeout(function () {
+    parsePaste();
+    const card = document.getElementById('d-result-card');
+    if (parsed.length && card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 60);
+});
 </script>
 </body>
 </html>
