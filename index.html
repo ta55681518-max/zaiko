@@ -329,7 +329,7 @@ const KEY = 'kemuri_zaiko_v1';
 let DB = load();
 
 function blank() {
-  return { ingredients: [], recipes: {}, days: {}, log: [], units: [], menus: [], manuals: {}, genres: [] };
+  return { ingredients: [], recipes: {}, days: {}, log: [], units: [], menus: [], manuals: {}, genres: [], genresSeeded: false };
 }
 
 /* ========== 単位 ========== */
@@ -413,12 +413,22 @@ function refreshUnitSelects(target, newVal) {
 }
 
 /* ========== ジャンル（材料の分類） ========== */
-const GENRES = ['野菜', '肉', '魚介', '玉子・豆腐', '練物・加工', '乾物・粉', '米・麺',
+// 最初だけ入れておく“おすすめジャンル”。以後は自由に削除・追加できる。
+const DEFAULT_GENRES = ['野菜', '肉', '魚介', '玉子・豆腐', '練物・加工', '乾物・粉', '米・麺',
   '調味料・油', 'ドリンク', '酒', 'その他'];
 
-// 既定のジャンル ＋ 自分で足したもの ＋ すでに使ってるもの
+// 初回だけ、おすすめジャンルを登録する（以後は DB.genres が正しい一覧）
+function seedGenres() {
+  if (DB.genresSeeded) return;
+  DB.genres = DB.genres || [];
+  DEFAULT_GENRES.forEach(g => { if (!DB.genres.includes(g)) DB.genres.push(g); });
+  DB.genresSeeded = true;
+  save();
+}
+
+// 使えるジャンル ＝ 登録済み（DB.genres）＋ すでに材料で使ってるもの
 function allGenres() {
-  const s = [...GENRES, ...(DB.genres || [])];
+  const s = [...(DB.genres || [])];
   DB.ingredients.forEach(g => { if (g.genre) s.push(g.genre); });
   return [...new Set(s.filter(Boolean))];
 }
@@ -463,9 +473,8 @@ function renderGenreManager() {
   el.innerHTML = list.map(name => {
     const q = esc(name).replace(/'/g, "\\'");
     const c = counts[name] || 0;
-    const builtin = GENRES.includes(name);
     return `<div style="padding:8px 0;border-bottom:1px solid #f0e9e0">
-      <div style="color:#2a2420;margin-bottom:5px">🏷 ${esc(name)} <span class="muted">(${c}品${builtin ? '・標準' : ''})</span></div>
+      <div style="color:#2a2420;margin-bottom:5px">🏷 ${esc(name)} <span class="muted">(${c}品)</span></div>
       <button class="mini" onclick="renameGenre('${q}')" style="margin-right:6px">✏ 名前変更</button>
       <button class="mini del" onclick="deleteGenre('${q}')">🗑 削除</button>
     </div>`;
@@ -477,7 +486,7 @@ function renameGenre(old) {
     if (!nw || nw === old) return;
     DB.ingredients.forEach(g => { if ((g.genre || '') === old) g.genre = nw; });
     DB.genres = (DB.genres || []).filter(x => x !== old);
-    if (!GENRES.includes(nw) && !(DB.genres || []).includes(nw)) DB.genres.push(nw);
+    if (!(DB.genres || []).includes(nw)) DB.genres.push(nw);
     save();
     renderStock();
     toast('「' + old + '」→「' + nw + '」に変えたさ');
@@ -1143,7 +1152,7 @@ function wipe() {
 }
 
 /* ========== 起動 ========== */
-function redrawAll() { normalizeAllUnits(); renderParsed(); renderHistory(); renderStock(); renderRecipeTab(); renderManual(); }
+function redrawAll() { seedGenres(); normalizeAllUnits(); renderParsed(); renderHistory(); renderStock(); renderRecipeTab(); renderManual(); }
 document.getElementById('d-date').value = today();
 document.getElementById('u-from').value = today();
 document.getElementById('u-to').value = today();
