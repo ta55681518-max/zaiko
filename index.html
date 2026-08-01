@@ -217,6 +217,11 @@
     <button class="act" onclick="addIngredient()">追加する</button>
   </div>
   <div class="card">
+    <h2>ジャンルの管理</h2>
+    <div class="muted gap">ジャンル名の変更や削除ができるさ。名前を変えると、そのジャンルの材料もまとめて付け替わるよ。</div>
+    <div id="genre-manage" class="muted">—</div>
+  </div>
+  <div class="card">
     <h2>仕入れ入力（在庫を足す）</h2>
     <div class="row gap">
       <div style="flex:2"><label>材料</label><select id="in-ing"></select></div>
@@ -443,6 +448,49 @@ function genreChanged(sel) {
     save();
     refreshGenreSelects(sel, u);
     toast('ジャンル「' + u + '」を追加したさ');
+  });
+}
+// ジャンルの管理（名前変更・削除）
+function renderGenreManager() {
+  const el = document.getElementById('genre-manage');
+  if (!el) return;
+  const counts = {};
+  DB.ingredients.forEach(g => { const k = g.genre || ''; counts[k] = (counts[k] || 0) + 1; });
+  const set = new Set([...(DB.genres || [])]);
+  Object.keys(counts).forEach(k => { if (k) set.add(k); }); // 使ってるジャンルも対象
+  const list = [...set].sort();
+  if (!list.length) { el.innerHTML = 'まだジャンルが無いさ。材料にジャンルを付けると出てくるよ'; return; }
+  el.innerHTML = list.map(name => {
+    const q = esc(name).replace(/'/g, "\\'");
+    const c = counts[name] || 0;
+    const builtin = GENRES.includes(name);
+    return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0e9e0">
+      <span style="flex:1;color:#2a2420">${esc(name)} <span class="muted">(${c}品${builtin ? '・標準' : ''})</span></span>
+      <button class="mini" onclick="renameGenre('${q}')">名前変更</button>
+      <button class="mini del" onclick="deleteGenre('${q}')">削除</button>
+    </div>`;
+  }).join('');
+}
+function renameGenre(old) {
+  askText('「' + old + '」の新しい名前を入れてね', '例）野菜', raw => {
+    const nw = raw.trim();
+    if (!nw || nw === old) return;
+    DB.ingredients.forEach(g => { if ((g.genre || '') === old) g.genre = nw; });
+    DB.genres = (DB.genres || []).filter(x => x !== old);
+    if (!GENRES.includes(nw) && !(DB.genres || []).includes(nw)) DB.genres.push(nw);
+    save();
+    renderStock();
+    toast('「' + old + '」→「' + nw + '」に変えたさ');
+  });
+}
+function deleteGenre(name) {
+  const c = DB.ingredients.filter(g => (g.genre || '') === name).length;
+  ask('「' + name + '」を削除するさ？' + (c ? '\n' + c + '品が「未分類」に戻るよ' : ''), () => {
+    DB.ingredients.forEach(g => { if ((g.genre || '') === name) g.genre = ''; });
+    DB.genres = (DB.genres || []).filter(x => x !== name);
+    save();
+    renderStock();
+    toast('「' + name + '」を削除したさ');
   });
 }
 function refreshGenreSelects(target, newVal) {
@@ -772,6 +820,8 @@ function renderStock() {
   const gw = document.getElementById('s-genre-wrap');
   const gcur = gw.querySelector('select') ? gw.querySelector('select').value : '';
   gw.innerHTML = genreSelectHTML(gcur, '').replace('<select', '<select id="s-genre"');
+
+  renderGenreManager();
 
   const lg = document.getElementById('s-log');
   lg.innerHTML = DB.log.length ? DB.log.slice(0, 40).map(l =>
