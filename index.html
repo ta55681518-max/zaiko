@@ -464,10 +464,10 @@ function renderGenreManager() {
     const q = esc(name).replace(/'/g, "\\'");
     const c = counts[name] || 0;
     const builtin = GENRES.includes(name);
-    return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0e9e0">
-      <span style="flex:1;color:#2a2420">${esc(name)} <span class="muted">(${c}品${builtin ? '・標準' : ''})</span></span>
-      <button class="mini" onclick="renameGenre('${q}')">名前変更</button>
-      <button class="mini del" onclick="deleteGenre('${q}')">削除</button>
+    return `<div style="padding:8px 0;border-bottom:1px solid #f0e9e0">
+      <div style="color:#2a2420;margin-bottom:5px">🏷 ${esc(name)} <span class="muted">(${c}品${builtin ? '・標準' : ''})</span></div>
+      <button class="mini" onclick="renameGenre('${q}')" style="margin-right:6px">✏ 名前変更</button>
+      <button class="mini del" onclick="deleteGenre('${q}')">🗑 削除</button>
     </div>`;
   }).join('');
 }
