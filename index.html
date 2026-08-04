@@ -814,9 +814,9 @@ function stockRowHTML(g, i) {
 }
 
 function renderStock() {
-  const wrap = document.getElementById('s-groups');
+  const sg = document.getElementById('s-groups');
   if (!DB.ingredients.length) {
-    wrap.innerHTML = '<div class="muted">まだ材料が無いさ。下から追加してね</div>';
+    sg.innerHTML = '<div class="muted">まだ材料が無いさ。下から追加してね</div>';
   } else {
     // ジャンルごとにまとめる（材料のインデックスを保持）
     const byGenre = {};
@@ -825,7 +825,7 @@ function renderStock() {
     Object.keys(byGenre).forEach(k => { if (k && !order.includes(k)) order.push(k); });
     if (byGenre['']) order.push(''); // 未分類は最後
     const thead = '<thead><tr><th>材料</th><th>単位</th><th class="num">在庫</th><th class="num">発注点</th><th></th></tr></thead>';
-    wrap.innerHTML = order.map(k => {
+    sg.innerHTML = order.map(k => {
       const idxs = byGenre[k];
       const label = k || '未分類';
       const lowN = idxs.filter(i => num(DB.ingredients[i].qty) <= num(DB.ingredients[i].min)).length;
