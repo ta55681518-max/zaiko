@@ -67,6 +67,11 @@
   .ing-line .i-unit { flex: 1; min-width: 0; padding: 9px 5px; font-size: 13px; background: #faf7f3; }
   hr { border: none; border-top: 1px solid #f0e9e0; margin: 12px 0; }
   details summary { cursor: pointer; font-size: 13px; color: #6a5f56; padding: 4px 0; }
+  details.ggrp { margin-bottom: 8px; }
+  details.ggrp summary { list-style: none; }
+  details.ggrp summary::-webkit-details-marker { display: none; }
+  details.ggrp summary::before { content: "▶"; font-size: 10px; margin-right: 6px; color: #8a7f76; }
+  details.ggrp[open] summary::before { content: "▼"; }
   /* 画面内のお知らせ・確認（ブラウザのポップアップは使わない） */
   #toast {
     position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px;
@@ -197,11 +202,9 @@
 <div id="p-stock" class="hide">
   <div class="card">
     <h2>材料マスタ・在庫</h2>
+    <div class="muted gap">ジャンルをタップすると中の材料が開くさ。🔴要発注があるジャンルは最初から開いてるよ。</div>
     <div id="s-alert"></div>
-    <table>
-      <thead><tr><th>材料</th><th>単位</th><th class="num">在庫</th><th class="num">発注点</th><th></th></tr></thead>
-      <tbody id="s-rows"></tbody>
-    </table>
+    <div id="s-groups"></div>
   </div>
   <div class="card">
     <h2>材料を追加</h2>
@@ -795,22 +798,45 @@ function applyToStock() {
 }
 
 /* ========== 在庫 ========== */
+var stockOpen = {}; // ジャンルの開閉状態を覚える（未設定は要発注があれば開く）
+
+function stockRowHTML(g, i) {
+  const low = num(g.qty) <= num(g.min);
+  return `<tr>
+    <td>${esc(g.name)}${low ? '<span class="pill red">要発注</span>' : ''}
+      <div style="margin-top:3px">${genreSelectHTML(g.genre || '', 'i-genre').replace('<select', `<select data-ing="${i}" style="padding:4px 6px;font-size:12px;background:#faf7f3;width:auto;max-width:100%"`)}</div>
+    </td>
+    <td style="width:82px">${unitSelectHTML(g.unit || '', 'i-unit').replace('<select', `<select data-ing="${i}"`)}</td>
+    <td class="num" style="width:76px"><input type="number" step="any" value="${g.qty}" style="text-align:right" onchange="DB.ingredients[${i}].qty=parseFloat(this.value)||0;save();renderStock()"></td>
+    <td class="num" style="width:70px"><input type="number" step="any" value="${g.min}" style="text-align:right" onchange="DB.ingredients[${i}].min=parseFloat(this.value)||0;save()"></td>
+    <td style="width:38px"><button class="mini del" onclick="delIng(${i})">×</button></td>
+  </tr>`;
+}
+
 function renderStock() {
-  const tb = document.getElementById('s-rows');
+  const wrap = document.getElementById('s-groups');
   if (!DB.ingredients.length) {
-    tb.innerHTML = '<tr><td colspan="5" class="muted">まだ材料が無いさ。下から追加してね</td></tr>';
+    wrap.innerHTML = '<div class="muted">まだ材料が無いさ。下から追加してね</div>';
   } else {
-    tb.innerHTML = DB.ingredients.map((g, i) => {
-      const low = num(g.qty) <= num(g.min);
-      return `<tr>
-        <td>${esc(g.name)}${low ? '<span class="pill red">要発注</span>' : ''}
-          <div style="margin-top:3px">${genreSelectHTML(g.genre || '', 'i-genre').replace('<select', `<select data-ing="${i}" style="padding:4px 6px;font-size:12px;background:#faf7f3;width:auto;max-width:100%"`)}</div>
-        </td>
-        <td style="width:82px">${unitSelectHTML(g.unit || '', 'i-unit').replace('<select', `<select data-ing="${i}"`)}</td>
-        <td class="num" style="width:76px"><input type="number" step="any" value="${g.qty}" style="text-align:right" onchange="DB.ingredients[${i}].qty=parseFloat(this.value)||0;save();renderStock()"></td>
-        <td class="num" style="width:70px"><input type="number" step="any" value="${g.min}" style="text-align:right" onchange="DB.ingredients[${i}].min=parseFloat(this.value)||0;save()"></td>
-        <td style="width:38px"><button class="mini del" onclick="delIng(${i})">×</button></td>
-      </tr>`;
+    // ジャンルごとにまとめる（材料のインデックスを保持）
+    const byGenre = {};
+    DB.ingredients.forEach((g, i) => { const k = g.genre || ''; (byGenre[k] = byGenre[k] || []).push(i); });
+    const order = allGenres().filter(k => byGenre[k]);
+    Object.keys(byGenre).forEach(k => { if (k && !order.includes(k)) order.push(k); });
+    if (byGenre['']) order.push(''); // 未分類は最後
+    const thead = '<thead><tr><th>材料</th><th>単位</th><th class="num">在庫</th><th class="num">発注点</th><th></th></tr></thead>';
+    wrap.innerHTML = order.map(k => {
+      const idxs = byGenre[k];
+      const label = k || '未分類';
+      const lowN = idxs.filter(i => num(DB.ingredients[i].qty) <= num(DB.ingredients[i].min)).length;
+      const isOpen = (k in stockOpen) ? stockOpen[k] : lowN > 0;
+      const rows = idxs.map(i => stockRowHTML(DB.ingredients[i], i)).join('');
+      return `<details class="ggrp" data-g="${esc(k)}" ${isOpen ? 'open' : ''} ontoggle="stockOpen[this.dataset.g]=this.open">
+        <summary style="cursor:pointer;padding:9px 8px;font-size:14px;font-weight:700;color:#4a4038;background:#efe7dc;border-radius:8px;margin-bottom:6px">
+          🏷 ${esc(label)} <span class="pill">${idxs.length}品</span>${lowN ? `<span class="pill red">🔴要発注${lowN}</span>` : ''}
+        </summary>
+        <table>${thead}<tbody>${rows}</tbody></table>
+      </details>`;
     }).join('');
   }
   const low = DB.ingredients.filter(g => num(g.qty) <= num(g.min));
