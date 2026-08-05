@@ -1,0 +1,17 @@
+# このリポジトリは GitHub Pages で「公開」される。
+# お店のデータや控えは上げないこと。
+
+# アプリから書き出したデータ（商品・レシピ・在庫が入っとる）
+復元データ*.json
+*_backup*.json
+
+# 編集前の控え
+index.backup-*.html
+*.backup-*.html
+
+# ローカル設定
+.claude/
+
+# OneDrive / Windows のゴミ
+desktop.ini
+Thumbs.db

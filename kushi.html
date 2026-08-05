@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<!-- saved from url=(0053)https://ta55681518-max.github.io/shift/kushiyaki.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>串焼き在庫 - 串焼KEMURI屋</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Segoe UI", "Meiryo", sans-serif;
+    margin: 0 auto; padding: 12px; max-width: 760px;
+    background: #f5f2ee; color: #2a2420;
+  }
+  h1 { font-size: 19px; margin: 0 0 2px; }
+  .sub { color: #8a7f76; font-size: 12px; margin-bottom: 10px; }
+  .nav { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .nav a {
+    font-size: 12px; text-decoration: none; padding: 6px 11px; border-radius: 20px;
+    background: #eee2d6; color: #6a5f56; font-weight: 600;
+  }
+  .nav a.z { background: #eef4f6; color: #2a6b7c; }
+  .tabs { display: flex; gap: 5px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 92px; padding: 9px 4px; border: none; border-radius: 10px;
+    background: #e7ddd0; color: #6a5f56; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .tab.on { background: #4a4038; color: #fff; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 13px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 12px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 8px; color: #4a4038; }
+  label { font-size: 12px; color: #6a5f56; display: block; margin-bottom: 3px; }
+  input, select, textarea {
+    width: 100%; padding: 9px 10px; border: 1px solid #ddd4cb;
+    border-radius: 8px; font-size: 15px; background: #fff; color: #2a2420;
+  }
+  textarea { min-height: 120px; font-family: monospace; font-size: 12px; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  button.act {
+    padding: 11px 14px; border: none; border-radius: 9px; cursor: pointer;
+    background: #c9622f; color: #fff; font-size: 15px; font-weight: 600; width: 100%;
+  }
+  button.sub2 { background: #6a5f56; }
+  button.ghost { background: #e7ddd0; color: #4a4038; }
+  button.mini {
+    padding: 5px 9px; border: none; border-radius: 7px; background: #e7ddd0;
+    color: #6a5f56; font-size: 13px; cursor: pointer; width: auto;
+  }
+  button.mini.del { background: #f3ded4; color: #b04a20; }
+  button.mini.go { background: #dcecd8; color: #3c7a2c; }
+  button.mini.warnbtn { background: #ffe9d6; color: #a85a1c; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; color: #8a7f76; padding: 6px 3px; border-bottom: 2px solid #eee2d6; white-space: nowrap; }
+  td { padding: 5px 3px; border-bottom: 1px solid #f0e9e0; vertical-align: middle; font-size: 14px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .scrollx { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #sum-table th, #sum-table td { white-space: nowrap; }
+  #sum-table tbody tr:active { background: #f4ede4; }
+  #sum-table tfoot td { border-top: 2px solid #eee2d6; border-bottom: none; font-weight: 700; color: #2a2420; }
+  .muted { color: #8a7f76; font-size: 12px; }
+  .warn { background: #fff6ed; border-left: 4px solid #e08a3c; padding: 9px 11px; border-radius: 6px; font-size: 13px; margin-bottom: 10px; }
+  .alert { background: #fdeeea; border-left: 4px solid #c9412f; padding: 9px 11px; border-radius: 6px; font-size: 13px; margin-bottom: 10px; }
+  .ok { background: #eef6ed; border-left: 4px solid #4c8a3c; padding: 9px 11px; border-radius: 6px; font-size: 13px; margin-bottom: 10px; }
+  .hide { display: none; }
+  .pill { display: inline-block; background: #eee2d6; color: #6a5f56; border-radius: 20px; padding: 2px 9px; font-size: 11px; margin-left: 5px; }
+  .pill.red { background: #f6d9d2; color: #b0402a; }
+  .pill.grn { background: #dcecd8; color: #3c7a2c; }
+  .pill.org { background: #ffe1c7; color: #a85a1c; }
+  .gap { margin-bottom: 9px; }
+  hr { border: none; border-top: 1px solid #f0e9e0; margin: 12px 0; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; margin: 3px; padding: 7px 11px;
+    border-radius: 20px; border: 1px solid #ddd4cb; background: #faf7f3; cursor: pointer;
+    font-size: 13px; user-select: none;
+  }
+  .chip.on { background: #4a4038; color: #fff; border-color: #4a4038; }
+  .big-stock { font-size: 20px; font-weight: 700; }
+
+  /* 串カード（ロット表示） */
+  .item { border: 1px solid #ece3d8; border-radius: 11px; padding: 11px; margin-bottom: 11px; background: #fffdfb; }
+  .item.low { border-color: #eabfae; background: #fdf5f1; }
+  .item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .item-name { font-size: 16px; font-weight: 700; color: #2a2420; }
+  .item-stock { text-align: right; white-space: nowrap; }
+  .fld { display: flex; flex-wrap: wrap; gap: 7px 9px; align-items: flex-end; margin: 9px 0 4px; }
+  .fld .f { flex: 0 0 auto; }
+  .fld .f label { margin-bottom: 2px; font-size: 11px; }
+  .fld .f input { width: 72px; text-align: right; padding: 7px 7px; font-size: 14px; }
+  .fld .f select.mode { width: 96px; padding: 7px 6px; font-size: 13px; }
+  .fld .del-wrap { margin-left: auto; align-self: center; }
+  .lots { margin-top: 7px; border-top: 1px dashed #ece3d8; padding-top: 7px; }
+  .lot { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid #f4ede4; font-size: 13px; }
+  .lot:last-child { border-bottom: none; }
+  .lot .lg { display: inline-flex; align-items: center; gap: 4px; color: #6a5f56; }
+  .lot input[type=date] { width: 140px; padding: 6px 7px; font-size: 13px; }
+  .lot input.q, .lot select.q { width: 68px; text-align: right; padding: 6px 7px; font-size: 14px; font-weight: 700; }
+  .lot.exp-bad { background: #fdeeea; border-radius: 7px; padding: 6px 6px; }
+  .lot.exp-soon { background: #fff6ed; border-radius: 7px; padding: 6px 6px; }
+  .lot .sp { flex: 1 1 auto; }
+  #toast {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px;
+    background: #4a4038; color: #fff; padding: 12px 18px; border-radius: 10px;
+    font-size: 14px; max-width: 92%; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    z-index: 99; white-space: pre-wrap; display: none; text-align: center;
+  }
+  #ask-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  #ask-box { background: #fff; border-radius: 14px; padding: 18px; max-width: 340px; width: 100%; }
+  #ask-msg { font-size: 15px; margin-bottom: 15px; white-space: pre-wrap; }
+  #dsc-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  #dsc-bg.show { display: flex; }
+  #dsc-box { background: #fff; border-radius: 14px; padding: 18px; max-width: 340px; width: 100%; }
+  #dsc-title { font-size: 15px; }
+</style>
+</head>
+<body>
+
+<div id="toast" style="display: none;">GASコードをコピーしたさ</div>
+<div id="ask-bg"><div id="ask-box">
+  <div id="ask-msg"></div>
+  <input id="ask-input" class="hide gap" onkeydown="if(event.key===&#39;Enter&#39;)askYes()">
+  <div class="row">
+    <button class="act" onclick="askYes()">はい</button>
+    <button class="act ghost" onclick="askNo()">やめる</button>
+  </div>
+</div></div>
+
+<div id="dsc-bg"><div id="dsc-box">
+  <div id="dsc-title" class="gap"></div>
+  <label>廃棄する本数</label>
+  <select id="dsc-qty" class="gap"></select>
+  <label>理由（任意）</label>
+  <input id="dsc-reason" class="gap" placeholder="例）期限切れ / 焦げ / 落とした">
+  <div class="row">
+    <button class="act" style="background:#b0402a" onclick="doDiscard()">廃棄する</button>
+    <button class="act ghost" onclick="closeDsc()">やめる</button>
+  </div>
+</div></div>
+
+<h1>🍢 串焼き在庫</h1>
+<div class="sub">串焼KEMURI屋 ／ 仕込み日・消費期限・原価つきで串を管理（zaiko／E-POS連動）</div>
+<div class="nav">
+  <a class="z" href="./index.html">📦 在庫・材料管理（zaiko）</a>
+  <a href="https://ta55681518-max.github.io/shift/index.html">🗓 シフト希望</a>
+</div>
+
+<div class="tabs">
+  <button class="tab" data-t="stock">串の在庫</button>
+  <button class="tab" data-t="reflect">出数を反映</button>
+  <button class="tab on" data-t="setup">串の設定・連携</button>
+</div>
+
+<!-- ============ 串の在庫 ============ -->
+<div id="p-stock" class="hide">
+  <div id="link-banner"><div class="warn">zaikoのデータがまだ読めてないさ。「串の設定・連携」タブで読み直すか、控えを取り込んでね。</div></div>
+
+  <div class="card" id="exp-card">
+    <h2>消費期限アラート <span class="pill" id="exp-count">0</span></h2>
+    <div id="exp-list" class="muted"><span class="ok" style="display:inline-block">期限が近い串は無いさ 👍</span></div>
+  </div>
+
+  <div class="card">
+    <h2>原価・ロス <span class="pill" id="val-pill">在庫 ¥0</span></h2>
+    <div id="report" class="muted">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+      <div>在庫金額合計<br><b style="font-size:17px;color:#2a2420">¥0</b></div>
+      <div>今月のロス<br><b style="font-size:17px;color:#b0402a">0本 / ¥0</b></div>
+      <div>全期間のロス<br><b style="font-size:17px;color:#6a5f56">0本 / ¥0</b></div>
+    </div>
+    <span class="muted">ロスの記録はまだ無いさ</span></div>
+  </div>
+
+  <div class="card" id="prep-card">
+    <h2>今日仕込む串 <span class="pill" id="prep-count">0</span></h2>
+    <div id="prep-list" class="muted"><span class="ok" style="display:inline-block">いまは足りてるさ！👍</span></div>
+  </div>
+
+  <div class="card">
+    <h2>在庫一覧（ロット合計） <span class="pill" id="sum-total"></span></h2>
+    <div class="scrollx"><table id="sum-table"><tbody><tr><td class="muted">まだ串が無いさ</td></tr></tbody></table></div>
+    <div class="muted" style="margin-top:6px">行をタップすると、その串の明細（ロット別）へ移動するさ。</div>
+  </div>
+
+  <div class="card">
+    <h2>串の在庫（ロット別）</h2>
+    <div id="s-alert"></div>
+    <div id="s-items"><div class="muted">まだ串が無いさ。「串の設定・連携」タブでzaikoから選ぶか、下で手で足してね</div></div>
+    <div class="muted" style="margin-top:6px">各ロットの「残」を直せば棚卸（実数入力）。仕込みは下の「仕込みを足す」で新しいロットとして入るさ。<br>「1注文の本数」＝E-POSで1回売れたときに減る本数（1本売り=1、2本セット・1皿2本=2）。出数の反映に使うさ。</div>
+  </div>
+
+  <div class="card">
+    <h2>仕込みを足す（新しいロット）</h2>
+    <div class="row gap">
+      <div style="flex:2"><label>串</label><select id="prep-ing"><option value="">（串が無いさ）</option></select></div>
+      <div><label>仕込んだ本数</label><select id="prep-qty"><option value="">―</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option><option value="60">60</option><option value="61">61</option><option value="62">62</option><option value="63">63</option><option value="64">64</option><option value="65">65</option><option value="66">66</option><option value="67">67</option><option value="68">68</option><option value="69">69</option><option value="70">70</option><option value="71">71</option><option value="72">72</option><option value="73">73</option><option value="74">74</option><option value="75">75</option><option value="76">76</option><option value="77">77</option><option value="78">78</option><option value="79">79</option><option value="80">80</option><option value="81">81</option><option value="82">82</option><option value="83">83</option><option value="84">84</option><option value="85">85</option><option value="86">86</option><option value="87">87</option><option value="88">88</option><option value="89">89</option><option value="90">90</option><option value="91">91</option><option value="92">92</option><option value="93">93</option><option value="94">94</option><option value="95">95</option><option value="96">96</option><option value="97">97</option><option value="98">98</option><option value="99">99</option><option value="100">100</option></select></div>
+    </div>
+    <div class="row gap">
+      <div><label>仕込み日</label><input id="prep-made" type="date"></div>
+      <div><label>消費期限（空なら日持ちから自動）</label><input id="prep-exp" type="date"></div>
+    </div>
+    <button class="act sub2" onclick="addPrep()">仕込みを足す</button>
+  </div>
+
+  <div class="card">
+    <h2>ロス（廃棄）を記録 <span class="muted">在庫からマイナス</span></h2>
+    <div class="muted gap">落とした・売れ残り・焦げ・期限切れ などの廃棄ぶんを在庫から引くさ。原価も記録するよ。<br>
+      「対象」で <b>まとめて（期限が近い順）</b> か <b>特定のロット</b> を選べる。ロット丸ごとなら、上の在庫の各ロットの「廃棄」ボタンでも一発さ。</div>
+    <div class="row gap">
+      <div style="flex:2"><label>串</label><select id="loss-ing" onchange="fillLossLots()"><option value="">（串が無いさ）</option></select></div>
+      <div style="flex:2"><label>対象（ロット）</label><select id="loss-lot" onchange="fillLossQty()"><option value="">まとめて（期限が近い順）</option></select></div>
+    </div>
+    <div class="row gap">
+      <div><label>廃棄する本数</label><select id="loss-qty"><option value="">―</option><option value="1">1</option></select></div>
+      <div style="flex:2"><label>理由（任意）</label><input id="loss-reason" placeholder="例）売れ残り / 落とした / 焦げ / 期限切れ"></div>
+    </div>
+    <button class="act" style="background:#b0402a" onclick="addLoss()">ロスを記録して引く</button>
+  </div>
+
+  <div class="card">
+    <h2>串を手で追加</h2>
+    <div class="muted gap">zaikoに無い串もここで足せるさ（設定タブでzaikoから選ぶのが基本）。</div>
+    <div class="row gap">
+      <div style="flex:2"><label>串の名前</label><input id="add-name" placeholder="豚バラ串"></div>
+      <div><label>原価(円/本)</label><input id="add-cost" type="number" step="any" value="0" inputmode="decimal"></div>
+    </div>
+    <div class="row gap">
+      <div><label>日持ち(日)</label><input id="add-keep" type="number" step="1" inputmode="numeric" placeholder="例）3"></div>
+      <div><label>今ある本数</label><select id="add-qty"><option value="0" selected="">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option><option value="60">60</option><option value="61">61</option><option value="62">62</option><option value="63">63</option><option value="64">64</option><option value="65">65</option><option value="66">66</option><option value="67">67</option><option value="68">68</option><option value="69">69</option><option value="70">70</option><option value="71">71</option><option value="72">72</option><option value="73">73</option><option value="74">74</option><option value="75">75</option><option value="76">76</option><option value="77">77</option><option value="78">78</option><option value="79">79</option><option value="80">80</option><option value="81">81</option><option value="82">82</option><option value="83">83</option><option value="84">84</option><option value="85">85</option><option value="86">86</option><option value="87">87</option><option value="88">88</option><option value="89">89</option><option value="90">90</option><option value="91">91</option><option value="92">92</option><option value="93">93</option><option value="94">94</option><option value="95">95</option><option value="96">96</option><option value="97">97</option><option value="98">98</option><option value="99">99</option><option value="100">100</option></select></div>
+    </div>
+    <button class="act ghost" onclick="addItemManual()">追加する</button>
+  </div>
+
+  <div class="card">
+    <h2>動きの記録（新しい順）</h2>
+    <div id="s-log" class="muted">まだ無いさ</div>
+  </div>
+</div>
+
+<!-- ============ 出数を反映 ============ -->
+<div id="p-reflect" class="hide">
+  <div class="card">
+    <h2>E-POSの出数を在庫から引く</h2>
+    <div class="muted gap">
+      zaikoに保存ずみの「今日の出数」を読んで、売れたぶんだけ串の在庫から自動で引くさ（期限が近いロットから先入れ先出しで引く）。<br>
+      まだ出数を入れてないときは、先に
+      <a href="./index.html" style="color:#2a6b7c;font-weight:600">zaikoを開いて出数を入れて</a>きてね。
+    </div>
+    <div id="r-src" class="muted gap"></div>
+    <label>反映する営業日</label>
+    <div class="row gap">
+      <select id="r-date"></select>
+      <button class="mini" style="flex:0 0 92px" onclick="previewReflect()">中身を見る</button>
+    </div>
+    <div id="r-preview"></div>
+    <div class="row" style="margin-top:9px">
+      <button class="act" onclick="applyReflect()">この日を反映する</button>
+      <button class="act ghost" onclick="applyAllUnreflected()">未反映を全部</button>
+    </div>
+    <div class="muted" style="margin-top:6px">※同じ日を二重に引かないよう、反映ずみの日は下に印がつくさ（取り消しもできる）。</div>
+  </div>
+
+  <div class="card">
+    <h2>反映ずみの日</h2>
+    <div id="r-applied" class="muted">まだ無いさ</div>
+  </div>
+</div>
+
+<!-- ============ 串の設定・連携 ============ -->
+<div id="p-setup" class="">
+  <div class="card">
+    <h2>スタッフと共有（Googleシート） <span class="pill" id="share-pill">OFF</span></h2>
+    <div id="share-status" class="muted gap"><span class="muted">共有OFF（この端末だけで保存中）</span></div>
+    <div class="muted gap">全員が同じ「共有URL」を入れると、串の在庫を<b>みんなで共有</b>できるさ。変更は自動で同期されるよ。</div>
+    <label>共有URL（GASウェブアプリのURL）</label>
+    <input id="share-url" class="gap" placeholder="https://script.google.com/macros/s/……/exec">
+    <div class="row gap">
+      <button class="act" onclick="saveShareUrl()">保存して接続</button>
+      <button class="act sub2" onclick="syncNowShare()">今すぐ同期</button>
+    </div>
+    <button class="act ghost gap" onclick="stopShare()">この端末の共有をやめる</button>
+    <details open="">
+      <summary>はじめての人向け：共有の作り方（1回だけ）</summary>
+      <div class="muted" style="margin-top:8px;line-height:1.7">
+        <b>①</b> Googleスプレッドシートを新規作成（名前は何でもOK）<br>
+        <b>②</b> メニューの <b>拡張機能 → Apps Script</b> を開く<br>
+        <b>③</b> 最初のコードを消して、下のコードを<b>全部貼り付けて保存</b>（💾）<br>
+        <b>④</b> 右上の <b>デプロイ → 新しいデプロイ</b>／種類＝<b>ウェブアプリ</b>／アクセス＝<b>全員</b>／デプロイ<br>
+        <b>⑤</b> 出てきた <b>/exec で終わるURL</b> を上の「共有URL」に貼って「保存して接続」<br>
+        <b>⑥</b> スタッフの端末でも<b>同じURL</b>を貼れば、全員で共有完了さ
+      </div>
+      <textarea id="gas-code" readonly="" style="min-height:200px;margin-top:8px" onclick="this.select()"></textarea>
+      <button class="act ghost" style="margin-top:8px" onclick="copyGas()">GASコードをコピー</button>
+      <div class="muted" style="margin-top:6px">※同時に2人が同じ串を編集すると、あとから保存したほうが有効さ（基本は問題なし）。</div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>zaikoとの連携</h2>
+    <div class="muted gap">このアプリはzaikoと<b>同じ場所（同じアドレス）</b>に置いてあるけ、同じブラウザでzaikoを一度ひらけば、あとは自動でデータを読み書きできるさ。</div>
+    <div id="z-status" class="muted gap"><span class="warn" style="display:block">zaikoのデータが読めてないさ。同じブラウザでzaikoを一度開くか、下の「控え」を取り込んでね。</span></div>
+    <div class="row">
+      <button class="act ghost" onclick="refreshZaiko()">zaikoを読み直す</button>
+      <a href="./index.html" class="act sub2" style="text-decoration:none;text-align:center;line-height:1.4">zaikoを開く</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>zaikoへ書き戻す（串在庫 → zaiko）</h2>
+    <div class="muted gap">
+      串の残り本数（ロットの合計）を、zaikoの「在庫」タブにも <b>本数（本）</b> で反映するさ。
+      仕込み・棚卸・出数反映・ロスで本数が変わるたびに自動で書き戻すよ。<br>
+      ※<b>同じ端末でzaikoを開いたことがあるとき</b>だけ効くさ（別端末の控えには書き戻せない）。
+      zaikoでは材料（例：豚バラ）とは別に、串（例：豚バラ串）が本数で並ぶよ。
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <input type="checkbox" id="sync-toggle" onchange="toggleSync(this)" style="width:auto;flex:0 0 auto">
+      <label for="sync-toggle" style="margin:0;font-size:14px;color:#2a2420">zaikoにも自動で反映する（同じ端末のとき）</label>
+    </div>
+    <div id="sync-status" class="muted gap">※いまは同じ端末のzaikoが見つからないさ。zaikoをこの端末で一度ひらいてね</div>
+    <button class="act" onclick="syncNow()">今すぐzaikoに反映</button>
+  </div>
+
+  <div class="card">
+    <h2>どれを「串」として管理する？</h2>
+    <div class="muted gap">zaikoの商品から、串焼きだけ選んでね。チェックした串がこのアプリの在庫表に出るさ。</div>
+    <div class="row gap">
+      <button class="mini go" onclick="autoPickKushi()">「串」がつく商品を自動で選ぶ</button>
+      <button class="mini" onclick="pickAllKushi(false)">ぜんぶ外す</button>
+    </div>
+    <div id="pick-list"><span class="muted">zaikoの商品が読めないさ。連携できたら、ここに商品が並ぶよ。</span></div>
+  </div>
+
+  <div class="card">
+    <h2>zaikoが読めないとき（引っ越し・別端末）</h2>
+    <div class="muted gap">
+      別の端末やアプリ内ブラウザだと、zaikoのデータを直接読めないことがあるさ。そのときは
+      zaikoの「データ」タブで<b>書き出した内容</b>をここに貼って「取り込む」を押してね。
+      （zaikoの本物のデータは上書きしない、この端末用の控えとして持つよ）
+    </div>
+    <textarea id="snap-box" placeholder="zaikoの「今のデータを書き出す」で出たJSONを貼り付け"></textarea>
+    <div class="row" style="margin-top:9px">
+      <button class="act sub2" onclick="importSnapshot()">この控えを取り込む</button>
+      <button class="act ghost" onclick="clearSnapshot()">控えを消す</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>このアプリのバックアップ</h2>
+    <div class="muted gap">串の在庫データ（このアプリぶん）を書き出し／読み込みできるさ。</div>
+    <button class="act ghost gap" onclick="exportKDB()">今の串在庫を書き出す</button>
+    <textarea id="io-box" placeholder="ここに書き出し内容が出る／貼り付けて読み込む"></textarea>
+    <div class="row" style="margin-top:9px">
+      <button class="act sub2" onclick="importKDB()">貼り付けを読み込む</button>
+      <button class="act ghost" onclick="copyBox()">コピー</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>全消し</h2>
+    <button class="act" style="background:#b0402a" onclick="wipe()">串在庫を全部消す</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   串焼き在庫アプリ（ロット／消費期限／ロス／原価つき）
+   ・自分のデータ … localStorage['kemuri_kushiyaki_v1']
+   ・zaikoのデータ … localStorage['kemuri_zaiko_v1'] を読む／串在庫は本数で書き戻す
+   ============================================================ */
+const KKEY = 'kemuri_kushiyaki_v1';   // このアプリの保存キー
+const ZKEY = 'kemuri_zaiko_v1';       // zaikoの保存キー
+const SNAP = 'kemuri_zaiko_snapshot'; // zaiko控え
+const SOON = 2;                       // 消費期限「まもなく」の日数
+
+/* items[name] = {
+     min:最低ライン, par:目標(仕込み到達点), per:1品あたり本数, cost:原価(円/本), keep:日持ち日数,
+     lots:[ {id, made:仕込み日, exp:消費期限, qty:残り本数} ]
+   } */
+function blank() { return { items: {}, applied: {}, log: [], losses: [], seq: 1, syncZaiko: true }; }
+let KDB = loadK();
+let VIEW = [];        // 在庫の表示順（名前配列）
+let PICK = [];        // 設定タブの商品チェックリスト表示順
+
+function loadK() {
+  try { const r = localStorage.getItem(KKEY); return r ? Object.assign(blank(), JSON.parse(r)) : blank(); }
+  catch (e) { return blank(); }
+}
+function save() {
+  try { localStorage.setItem(KKEY, JSON.stringify(KDB)); }
+  catch (e) { toast('保存できんかったさ…'); }
+  schedulePush();
+}
+function nextSeq() { return KDB.seq++; }
+
+/* ===== スタッフ共有（Googleシート＋GAS） =====
+   全端末が同じ共有URL（GASウェブアプリ）を見て、同じデータを読み書きする。
+   変更は自動で保存（push）、他端末の更新は定期＆フォーカス時に取得（pull）。
+   同時編集はあとから保存した内容が有効（last-write-wins）。 */
+const SHAREKEY = 'kemuri_kushiyaki_share';
+let SHARE = { url: localStorage.getItem(SHAREKEY) || '', rev: 0, pushing: false, dirty: false, timer: null, lastSync: 0, err: '', loop: false };
+let READY = false;   // 起動時の初期化中はpushしない
+let PULLING = false;
+
+function shareOn() { return !!SHARE.url; }
+function schedulePush() {
+  if (!READY || !shareOn()) return;
+  SHARE.dirty = true; updateShareStatus();
+  clearTimeout(SHARE.timer);
+  SHARE.timer = setTimeout(pushShared, 1200);
+}
+async function pushShared() {
+  if (!shareOn()) return;
+  SHARE.pushing = true; updateShareStatus();
+  try {
+    const res = await fetch(SHARE.url, { method: 'POST', body: JSON.stringify({ data: KDB, baseRev: SHARE.rev }) });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error || '保存に失敗');
+    SHARE.rev = r.rev; SHARE.dirty = false; SHARE.err = ''; SHARE.lastSync = Date.now();
+  } catch (e) { SHARE.err = String(e.message || e); }
+  SHARE.pushing = false; updateShareStatus();
+}
+async function pullShared(opts) {
+  opts = opts || {};
+  if (!shareOn()) return;
+  if (!opts.force && (SHARE.pushing || SHARE.dirty)) return;   // ローカル未保存を上書きしない
+  if (PULLING) return; PULLING = true;
+  try {
+    const res = await fetch(SHARE.url);
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error || '読み込みに失敗');
+    if (r.data && (opts.force || r.rev !== SHARE.rev)) {
+      KDB = Object.assign(blank(), r.data);
+      normalizeItems();
+      localStorage.setItem(KKEY, JSON.stringify(KDB));   // pushを起こさず直接保存
+      SHARE.rev = (r.rev != null ? r.rev : SHARE.rev);
+      redrawAll();
+      if (!document.getElementById('p-reflect').classList.contains('hide')) renderReflect();
+      if (!document.getElementById('p-setup').classList.contains('hide')) renderSetup();
+    } else if (r.data == null && opts.force) {
+      pushShared();   // 共有先が空 → この端末の内容を上げる
+    }
+    if (r.rev != null) SHARE.rev = r.rev;
+    SHARE.err = ''; SHARE.lastSync = Date.now();
+  } catch (e) { SHARE.err = String(e.message || e); }
+  PULLING = false; updateShareStatus();
+}
+function startShareLoop() {
+  if (SHARE.loop) return;
+  SHARE.loop = true;
+  setInterval(() => { if (shareOn()) pullShared(); }, 20000);
+  window.addEventListener('focus', () => { if (shareOn()) pullShared(); });
+}
+function saveShareUrl() {
+  const url = document.getElementById('share-url').value.trim();
+  if (url && url.indexOf('http') !== 0) { toast('URLは https://… の形で貼ってね'); return; }
+  if (!url) { stopShare(); return; }
+  SHARE.url = url; localStorage.setItem(SHAREKEY, url);
+  fetch(url).then(r => r.json()).then(r => {
+    startShareLoop();
+    const hasData = r && r.ok && r.data && Object.keys(r.data.items || {}).length;
+    if (hasData) {
+      ask('共有先にすでにデータがあるさ。\n共有先の内容を読み込む？\n（「はい」＝共有を読み込む／「やめる」＝この端末の内容を共有先に上げる）',
+        () => { SHARE.rev = r.rev || 0; pullShared({ force: true }); toast('共有につないで読み込んださ'); },
+        () => { SHARE.rev = r.rev || 0; pushShared(); toast('共有につないで、この端末の内容を上げたさ'); });
+    } else {
+      SHARE.rev = (r && r.rev) || 0; pushShared(); toast('共有につないださ（この端末の内容を上げた）');
+    }
+    renderSetup(); renderLinkBanner();
+  }).catch(e => { SHARE.err = String(e); toast('共有先につながらないさ…URLを確認してね'); renderSetup(); });
+}
+function stopShare() {
+  SHARE.url = ''; localStorage.removeItem(SHAREKEY); SHARE.dirty = false; clearTimeout(SHARE.timer);
+  updateShareStatus(); renderSetup(); renderLinkBanner(); toast('この端末の共有をOFFにしたさ');
+}
+async function syncNowShare() {
+  if (!shareOn()) { toast('先に共有URLを保存してね'); return; }
+  clearTimeout(SHARE.timer);
+  await pushShared();
+  await pullShared();
+  toast('同期したさ（最終同期 ' + shareTime(SHARE.lastSync) + '）');
+}
+function shareTime(ms) { if (!ms) return '—'; const d = new Date(ms); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2); }
+function updateShareStatus() {
+  const el = document.getElementById('share-status'); if (!el) return;
+  const pill = document.getElementById('share-pill');
+  if (!shareOn()) { el.innerHTML = '<span class="muted">共有OFF（この端末だけで保存中）</span>'; if (pill) pill.textContent = 'OFF'; return; }
+  const state = SHARE.err ? `<span style="color:#b0402a">エラー：${esc(SHARE.err)}</span>`
+    : SHARE.pushing ? '保存中…' : SHARE.dirty ? '未保存の変更あり…' : '同期OK';
+  el.innerHTML = `<span class="${SHARE.err ? '' : 'ok'}" style="display:block">👥 共有中（${state}）／最終同期 ${shareTime(SHARE.lastSync)}</span>`;
+  if (pill) pill.textContent = SHARE.err ? '!' : 'ON';
+}
+
+/* GASに貼り付けるコード（コピー用） */
+const GAS_SRC = `const SHEET_NAME='kushiyaki';
+function sheet_(){var ss=SpreadsheetApp.getActiveSpreadsheet();var sh=ss.getSheetByName(SHEET_NAME);if(!sh)sh=ss.insertSheet(SHEET_NAME);return sh;}
+function doGet(){var sh=sheet_();var data=sh.getRange('A1').getValue();var rev=Number(sh.getRange('B1').getValue())||0;return out_({ok:true,data:data?JSON.parse(data):null,rev:rev});}
+function doPost(e){var lock=LockService.getScriptLock();lock.waitLock(20000);try{var body=JSON.parse(e.postData.contents||'{}');var sh=sheet_();var rev=(Number(sh.getRange('B1').getValue())||0)+1;sh.getRange('A1').setValue(JSON.stringify(body.data||{}));sh.getRange('B1').setValue(rev);return out_({ok:true,rev:rev});}catch(err){return out_({ok:false,error:String(err)});}finally{lock.releaseLock();}}
+function out_(o){return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);}`;
+function copyGas() {
+  const t = document.getElementById('gas-code'); t.select();
+  navigator.clipboard.writeText(t.value).then(() => toast('GASコードをコピーしたさ'), () => { try { document.execCommand('copy'); toast('コピーしたさ'); } catch (e) {} });
+}
+
+/* 旧データ（stockスカラー）→ ロット構造へ移行、欠けたフィールドを補う */
+function normalizeItems() {
+  let changed = false;
+  if (!Array.isArray(KDB.losses)) { KDB.losses = []; changed = true; }
+  if (KDB.seq == null) { KDB.seq = 1; changed = true; }
+  Object.keys(KDB.items).forEach(n => {
+    const it = KDB.items[n];
+    if (!Array.isArray(it.lots)) {
+      const q = num(it.stock);
+      it.lots = q > 0 ? [{ id: nextSeq(), made: '', exp: '', qty: q }] : [];
+      changed = true;
+    }
+    it.lots.forEach(l => { if (l.id == null) { l.id = nextSeq(); changed = true; } });
+    if (it.cost == null) { it.cost = 0; changed = true; }
+    if (it.costMode == null) { it.costMode = 'piece'; changed = true; }  // 'piece'=1本あたり / 'gram'=グラム
+    if (it.gPer == null) { it.gPer = 0; changed = true; }                // 1本あたりのグラム数
+    if (it.gPrice == null) { it.gPrice = 0; changed = true; }            // 円/g
+    if (it.keep == null) { it.keep = ''; changed = true; }
+    if (it.per == null) { it.per = 1; changed = true; }
+    if (it.min == null) { it.min = 0; changed = true; }
+    if (it.par == null) { it.par = 0; changed = true; }
+    if ('stock' in it) { delete it.stock; changed = true; }
+  });
+  if (changed) save();
+}
+
+/* ---- zaiko連携（読み） ---- */
+function readZaiko() {
+  try { const live = JSON.parse(localStorage.getItem(ZKEY)); if (live && typeof live === 'object') return live; } catch (e) {}
+  try { const snap = JSON.parse(localStorage.getItem(SNAP)); if (snap && typeof snap === 'object') return snap; } catch (e) {}
+  return null;
+}
+function zaikoIsLive() { try { return !!JSON.parse(localStorage.getItem(ZKEY)); } catch (e) { return false; } }
+function liveZaiko() { try { const z = JSON.parse(localStorage.getItem(ZKEY)); return (z && typeof z === 'object') ? z : null; } catch (e) { return null; } }
+function zProducts() {
+  const z = readZaiko(); if (!z) return [];
+  const s = new Set([...Object.keys(z.recipes || {}), ...(z.menus || [])]);
+  Object.values(z.days || {}).forEach(rows => rows.forEach(r => s.add(r.name)));
+  return [...s].filter(Boolean).sort();
+}
+function zDays() { const z = readZaiko(); return z ? (z.days || {}) : {}; }
+
+/* 串在庫の合計本数を zaiko の在庫（本数）へ書き戻す */
+function syncToZaiko(reason, force) {
+  if (!force && !KDB.syncZaiko) return false;
+  const z = liveZaiko();
+  if (!z) return false;
+  z.ingredients = z.ingredients || [];
+  let n = 0;
+  Object.keys(KDB.items).forEach(name => {
+    const it = KDB.items[name];
+    const total = stockOf(name);
+    let g = z.ingredients.find(x => x.name === name);
+    const meaningful = total > 0 || num(it.min) > 0 || g;
+    if (!meaningful) return;
+    if (!g) { g = { name, unit: '本', qty: 0, min: 0 }; z.ingredients.push(g); }
+    if (!g.unit) g.unit = '本';
+    g.qty = total;
+    if (num(it.min) > 0) g.min = num(it.min);
+    n++;
+  });
+  if (!n) return false;
+  z.log = z.log || [];
+  z.log.unshift({ at: nowStr(), type: '串反映', text: `串焼き在庫アプリから ${n}種を反映${reason ? '（' + reason + '）' : ''}` });
+  try { localStorage.setItem(ZKEY, JSON.stringify(z)); return true; }
+  catch (e) { toast('zaikoへの反映に失敗したさ…'); return false; }
+}
+function syncNow() {
+  if (!zaikoIsLive()) { toast('同じ端末のzaikoが見つからないさ。\nこの端末でzaikoを一度ひらいてね\n（別端末の控えには書き戻せない）'); return; }
+  const ok = syncToZaiko('手動反映', true);
+  toast(ok ? 'zaikoに反映したさ！\nzaikoの「在庫」タブに串が本数で出るよ' : '反映するものが無かったさ（先に本数を入れてね）');
+  renderSetup(); renderLinkBanner();
+}
+function toggleSync(el) {
+  KDB.syncZaiko = el.checked; save();
+  if (el.checked) syncToZaiko('自動反映ON');
+  renderSetup(); renderLinkBanner();
+  toast(el.checked ? 'zaikoへの自動反映をONにしたさ' : '自動反映をOFFにしたさ');
+}
+
+/* ---- 小物 ---- */
+function num(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function fmt(n) { return (Math.round(n * 100) / 100).toLocaleString(); }
+function yen(n) { return '¥' + fmt(Math.round(num(n))); }
+function today() { return new Date().toISOString().slice(0, 10); }
+function nowStr() { return new Date().toLocaleString('ja-JP'); }
+function addDays(d, n) { if (!d) return ''; const t = new Date(d + 'T00:00:00'); t.setDate(t.getDate() + num(n)); return t.toISOString().slice(0, 10); }
+function mdShort(d) { if (!d) return '—'; const p = d.split('-'); return p.length === 3 ? (+p[1]) + '/' + (+p[2]) : d; }
+function isKushiName(n) { return /串/.test(n); }
+
+/* 本数プルダウン用のoption。selが範囲外でも必ず含める。blank=先頭に空選択 */
+function numOpts(from, to, sel, blank) {
+  sel = (sel === '' || sel == null) ? '' : num(sel);
+  let hi = to; if (sel !== '' && sel > hi) hi = sel;
+  let s = blank ? '<option value="">―</option>' : '';
+  for (let v = from; v <= hi; v++) s += `<option value="${v}"${v === sel ? ' selected' : ''}>${v}</option>`;
+  return s;
+}
+/* 固定レンジの本数プルダウンを用意（起動時に1回） */
+function fillQtySelects() {
+  document.getElementById('prep-qty').innerHTML = numOpts(1, 100, '', true);
+  document.getElementById('loss-qty').innerHTML = numOpts(1, 100, '', true);
+  document.getElementById('add-qty').innerHTML = numOpts(0, 100, 0, false);
+}
+
+/* 消費期限の状態：'' / 'exp-soon' / 'exp-bad' */
+function expClass(exp) {
+  if (!exp) return '';
+  const t = today();
+  if (exp < t) return 'exp-bad';
+  if (exp <= addDays(t, SOON)) return 'exp-soon';
+  return '';
+}
+function expLabel(exp) {
+  const c = expClass(exp);
+  if (c === 'exp-bad') return '<span class="pill red">期限切れ</span>';
+  if (c === 'exp-soon') return '<span class="pill org">まもなく</span>';
+  return '';
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.style.display = 'none', 3400);
+}
+let askCb = null, askCbNo = null;
+function ask(msg, cb, cbNo) {
+  askCb = cb; askCbNo = cbNo || null;
+  document.getElementById('ask-msg').textContent = msg;
+  document.getElementById('ask-input').classList.add('hide');
+  document.getElementById('ask-bg').style.display = 'flex';
+}
+function closeAsk() { document.getElementById('ask-bg').style.display = 'none'; askCb = null; askCbNo = null; }
+function askYes() { const c = askCb; closeAsk(); if (c) c(); }
+function askNo() { const c = askCbNo; closeAsk(); if (c) c(); }
+
+/* ========== 在庫の計算（ロット） ========== */
+function stockOf(n) { const it = KDB.items[n]; return it ? it.lots.reduce((a, l) => a + num(l.qty), 0) : 0; }
+/* 1本あたり原価。gramモードなら（g/本 × 円/g）で計算 */
+function costOf(n) { const it = KDB.items[n]; if (!it) return 0; return it.costMode === 'gram' ? num(it.gPer) * num(it.gPrice) : num(it.cost); }
+function stockValue(n) { return stockOf(n) * costOf(n); }
+
+/* 先入れ先出し（期限が早い→仕込みが古い→id順）で並べる */
+function lotOrder(lots) {
+  return lots.slice().filter(l => num(l.qty) > 0).sort((a, b) => {
+    const ae = a.exp || '9999-12-31', be = b.exp || '9999-12-31';
+    if (ae !== be) return ae < be ? -1 : 1;
+    const am = a.made || '0000-00-00', bm = b.made || '0000-00-00';
+    if (am !== bm) return am < bm ? -1 : 1;
+    return a.id - b.id;
+  });
+}
+/* qty本を消費。消費したロットの内訳(slices)と不足(short)を返す */
+function consume(n, qty) {
+  const it = KDB.items[n]; let need = num(qty); const slices = [];
+  lotOrder(it.lots).forEach(l => {
+    if (need <= 0) return;
+    const take = Math.min(num(l.qty), need);
+    if (take > 0) { l.qty = num(l.qty) - take; need -= take; slices.push({ id: l.id, made: l.made, exp: l.exp, take }); }
+  });
+  it.lots = it.lots.filter(l => num(l.qty) > 0);
+  return { taken: num(qty) - need, slices, short: need };
+}
+/* 指定した1ロットから qty本 消費（ロット指定の廃棄用） */
+function consumeFromLot(n, lotId, qty) {
+  const it = KDB.items[n]; const l = it.lots.find(x => x.id === lotId);
+  if (!l) return { taken: 0, short: num(qty), slices: [] };
+  const take = Math.min(num(l.qty), num(qty));
+  l.qty = num(l.qty) - take;
+  const slices = [{ id: l.id, made: l.made, exp: l.exp, take }];
+  it.lots = it.lots.filter(x => num(x.qty) > 0);
+  return { taken: take, short: num(qty) - take, slices };
+}
+/* slices を元に戻す（反映取消） */
+function restore(n, slices) {
+  const it = KDB.items[n]; if (!it) return;
+  slices.forEach(s => {
+    let l = it.lots.find(x => x.id === s.id);
+    if (l) l.qty = num(l.qty) + s.take;
+    else it.lots.push({ id: s.id != null ? s.id : nextSeq(), made: s.made || '', exp: s.exp || '', qty: s.take });
+  });
+}
+
+/* ========== タブ ========== */
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  ['stock', 'reflect', 'setup'].forEach(t =>
+    document.getElementById('p-' + t).classList.toggle('hide', t !== b.dataset.t));
+  if (b.dataset.t === 'stock') renderStock();
+  if (b.dataset.t === 'reflect') renderReflect();
+  if (b.dataset.t === 'setup') renderSetup();
+});
+
+/* ========== 串の在庫 ========== */
+function renderLinkBanner() {
+  const el = document.getElementById('link-banner');
+  const z = readZaiko();
+  if (!z) {
+    el.innerHTML = '<div class="warn">zaikoのデータがまだ読めてないさ。「串の設定・連携」タブで読み直すか、控えを取り込んでね。</div>';
+    return;
+  }
+  const days = Object.keys(zDays()).sort();
+  const latest = days.length ? days[days.length - 1] : 'なし';
+  const src = zaikoIsLive() ? '同じ端末のzaiko' : '控え（取り込みぶん）';
+  const sync = KDB.syncZaiko ? (zaikoIsLive() ? '／zaikoへ自動反映 <b>ON</b>' : '／自動反映ON（この端末では書き戻し不可）') : '';
+  const shr = shareOn() ? `／👥スタッフ共有 <b>ON</b>` : '';
+  el.innerHTML = `<div class="ok">zaikoと連携中（${src}）／串の登録 ${Object.keys(KDB.items).length}種・最新の出数 ${esc(latest)}${sync}${shr}</div>`;
+}
+
+function renderStock() {
+  renderLinkBanner();
+  const names = Object.keys(KDB.items).sort((a, b) => a.localeCompare(b, 'ja'));
+  VIEW = names;
+
+  renderExpiry(names);
+  renderReport(names);
+  renderPrep(names);
+  renderSummary(names);
+
+  const box = document.getElementById('s-items');
+  box.innerHTML = names.length ? names.map((n, i) => itemCardHTML(n, i)).join('')
+    : '<div class="muted">まだ串が無いさ。「串の設定・連携」タブでzaikoから選ぶか、下で手で足してね</div>';
+
+  const low = names.filter(n => stockOf(n) <= num(KDB.items[n].min));
+  document.getElementById('s-alert').innerHTML = low.length
+    ? `<div class="alert">最低ラインを切ってる串：${low.map(esc).join('、')}</div>` : '';
+
+  const opts = names.length ? names.map(n => `<option>${esc(n)}</option>`).join('') : '<option value="">（串が無いさ）</option>';
+  document.getElementById('prep-ing').innerHTML = opts;
+  const lossSel = document.getElementById('loss-ing');
+  const lossCur = lossSel.value;
+  lossSel.innerHTML = opts;
+  if (lossCur && names.indexOf(lossCur) !== -1) lossSel.value = lossCur;
+  fillLossLots();
+
+  const lg = document.getElementById('s-log');
+  lg.innerHTML = KDB.log.length ? KDB.log.slice(0, 40).map(l =>
+    `<div style="padding:4px 0;border-bottom:1px solid #f0e9e0"><b style="color:#2a2420">${esc(l.type)}</b> ${esc(l.text)}<br><span style="font-size:11px">${esc(l.at)}</span></div>`).join('') : 'まだ無いさ';
+}
+
+function itemCardHTML(n, i) {
+  const it = KDB.items[n];
+  const total = stockOf(n);
+  const low = total <= num(it.min);
+  const lots = it.lots.slice().sort((a, b) => {
+    const ae = a.exp || '9999-12-31', be = b.exp || '9999-12-31';
+    if (ae !== be) return ae < be ? -1 : 1;
+    return (a.made || '') < (b.made || '') ? -1 : 1;
+  });
+  const lotsHTML = lots.length ? lots.map(l => lotRowHTML(i, l)).join('')
+    : '<div class="muted" style="padding:4px 0">ロットなし。下の「仕込みを足す」で入れてね</div>';
+  const c = costOf(n);
+  const gram = it.costMode === 'gram';
+  const costFlds = `
+      <span class="f"><label>原価タイプ</label><select class="mode" onchange="setField(${i},'costMode',this.value)">
+        <option value="piece"${gram ? '' : ' selected'}>1本あたり</option>
+        <option value="gram"${gram ? ' selected' : ''}>グラム</option></select></span>
+      ${gram
+        ? `<span class="f"><label>g/本</label><input type="number" step="any" inputmode="decimal" value="${num(it.gPer)}" onchange="setField(${i},'gPer',this.value)"></span>
+           <span class="f"><label>¥/g</label><input type="number" step="any" inputmode="decimal" value="${num(it.gPrice)}" onchange="setField(${i},'gPrice',this.value)"></span>`
+        : `<span class="f"><label>原価¥/本</label><input type="number" step="any" inputmode="decimal" value="${num(it.cost)}" onchange="setField(${i},'cost',this.value)"></span>`}`;
+  const costNote = gram ? ` <span class="muted">(${fmt(num(it.gPer))}g×¥${fmt(num(it.gPrice))}/g)</span>` : '';
+  return `<div class="item ${low ? 'low' : ''}" id="item-${i}">
+    <div class="item-head">
+      <div class="item-name">${esc(n)}${low ? ' <span class="pill red">要仕込み</span>' : ''}</div>
+      <div class="item-stock"><span class="big-stock">${fmt(total)}</span>本
+        <span class="muted"> ・${yen(c)}/本${costNote}${c ? ' ・在庫' + yen(stockValue(n)) : ''}</span></div>
+    </div>
+    <div class="fld">
+      <span class="f"><label>最低</label><input type="number" step="1" inputmode="numeric" value="${num(it.min)}" onchange="setField(${i},'min',this.value)"></span>
+      <span class="f"><label>目標</label><input type="number" step="1" inputmode="numeric" value="${num(it.par)}" onchange="setField(${i},'par',this.value)"></span>
+      ${costFlds}
+      <span class="f"><label>日持ち日</label><input type="number" step="1" inputmode="numeric" value="${it.keep === '' ? '' : num(it.keep)}" onchange="setField(${i},'keep',this.value)"></span>
+      <span class="f" title="E-POSで1回売れたときに減る本数（1本売り=1、2本セット・1皿2本=2）"><label>1注文の本数</label><input type="number" step="any" inputmode="decimal" value="${num(it.per) || 1}" onchange="setField(${i},'per',this.value)"></span>
+      <span class="del-wrap"><button class="mini del" onclick="delItem(${i})">串を削除</button></span>
+    </div>
+    <div class="lots">${lotsHTML}</div>
+  </div>`;
+}
+
+function lotRowHTML(i, l) {
+  const cls = expClass(l.exp);
+  return `<div class="lot ${cls}">
+    <span class="lg">仕込 <input type="date" value="${l.made || ''}" onchange="setLot(${i},${l.id},'made',this.value)"></span>
+    <span class="lg">期限 <input type="date" value="${l.exp || ''}" onchange="setLot(${i},${l.id},'exp',this.value)"></span>
+    <span class="lg">残 <select class="q" onchange="setLot(${i},${l.id},'qty',this.value)">${numOpts(0, 150, num(l.qty))}</select>本</span>
+    ${expLabel(l.exp)}
+    <span class="sp"></span>
+    <button class="mini warnbtn" onclick="discardLot(${i},${l.id})">廃棄</button>
+    <button class="mini del" onclick="delLot(${i},${l.id})">×</button>
+  </div>`;
+}
+
+function renderExpiry(names) {
+  const list = [];
+  names.forEach(n => KDB.items[n].lots.forEach(l => {
+    const c = expClass(l.exp);
+    if (c && num(l.qty) > 0) list.push({ n, l, c });
+  }));
+  list.sort((a, b) => (a.l.exp || '') < (b.l.exp || '') ? -1 : 1);
+  document.getElementById('exp-count').textContent = list.length;
+  const el = document.getElementById('exp-list');
+  el.innerHTML = list.length ? list.map(x => {
+    const i = VIEW.indexOf(x.n);
+    return `<div style="padding:6px 0;border-bottom:1px solid #f0e9e0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <b style="color:#2a2420">${esc(x.n)}</b> ${expLabel(x.l.exp)}
+      <span class="muted">期限 ${esc(mdShort(x.l.exp))}・残 ${fmt(num(x.l.qty))}本</span>
+      <span style="flex:1"></span>
+      <button class="mini warnbtn" onclick="discardLot(${i},${x.l.id})">このロットを廃棄</button>
+    </div>`;
+  }).join('') : '<span class="ok" style="display:inline-block">期限が近い串は無いさ 👍</span>';
+}
+
+function renderReport(names) {
+  const totalVal = names.reduce((a, n) => a + stockValue(n), 0);
+  const tm = today().slice(0, 7);
+  const mLoss = KDB.losses.filter(x => (x.d || '').slice(0, 7) === tm);
+  const mQty = mLoss.reduce((a, x) => a + num(x.qty), 0), mCost = mLoss.reduce((a, x) => a + num(x.cost), 0);
+  const aQty = KDB.losses.reduce((a, x) => a + num(x.qty), 0), aCost = KDB.losses.reduce((a, x) => a + num(x.cost), 0);
+  document.getElementById('val-pill').textContent = '在庫 ' + yen(totalVal);
+  const recent = KDB.losses.slice(0, 6).map(x =>
+    `<div style="padding:3px 0"><b style="color:#2a2420">${esc(x.name)}</b> −${fmt(num(x.qty))}本 ${x.cost ? '（' + yen(x.cost) + '）' : ''} <span class="muted">${esc(x.reason || '')} ${esc(x.d || '')}</span></div>`).join('');
+  document.getElementById('report').innerHTML = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+      <div>在庫金額合計<br><b style="font-size:17px;color:#2a2420">${yen(totalVal)}</b></div>
+      <div>今月のロス<br><b style="font-size:17px;color:#b0402a">${fmt(mQty)}本 / ${yen(mCost)}</b></div>
+      <div>全期間のロス<br><b style="font-size:17px;color:#6a5f56">${fmt(aQty)}本 / ${yen(aCost)}</b></div>
+    </div>
+    ${recent ? '<div style="margin-top:4px"><span class="muted">最近のロス</span>' + recent + '</div>' : '<span class="muted">ロスの記録はまだ無いさ</span>'}`;
+}
+
+function renderPrep(names) {
+  const prep = names
+    .filter(n => { const it = KDB.items[n]; const s = stockOf(n); return s <= num(it.min) || (num(it.par) > 0 && s < num(it.par)); })
+    .map(n => {
+      const it = KDB.items[n], s = stockOf(n);
+      const need = num(it.par) > 0 ? Math.max(0, Math.ceil(num(it.par) - s)) : null;
+      return { n, s, need };
+    });
+  document.getElementById('prep-count').textContent = prep.length;
+  document.getElementById('prep-list').innerHTML = prep.length
+    ? prep.map(p => `<div style="padding:6px 0;border-bottom:1px solid #f0e9e0">
+        <b style="color:#2a2420">${esc(p.n)}</b> — 残り${fmt(p.s)}本
+        ${p.need != null ? `／目標まであと <b style="color:#b0402a">${fmt(p.need)}本</b>` : '<span class="pill red">要仕込み</span>'}
+      </div>`).join('')
+    : '<span class="ok" style="display:inline-block">いまは足りてるさ！👍</span>';
+}
+
+/* ロット合計の一覧表 */
+function renderSummary(names) {
+  const tbl = document.getElementById('sum-table');
+  if (!names.length) {
+    document.getElementById('sum-total').textContent = '';
+    tbl.innerHTML = '<tbody><tr><td class="muted">まだ串が無いさ</td></tr></tbody>';
+    return;
+  }
+  let totQ = 0, totV = 0;
+  const rows = names.map((n, i) => {
+    const it = KDB.items[n];
+    const total = stockOf(n), val = stockValue(n);
+    const active = it.lots.filter(l => num(l.qty) > 0);
+    const exps = active.map(l => l.exp).filter(Boolean).sort();
+    const nextExp = exps.length ? exps[0] : '';
+    const ec = expClass(nextExp);
+    const expStyle = ec === 'exp-bad' ? 'color:#b0402a;font-weight:700' : ec === 'exp-soon' ? 'color:#a85a1c;font-weight:600' : '';
+    const low = total <= num(it.min);
+    const c = costOf(n);
+    totQ += total; totV += val;
+    return `<tr onclick="focusItem(${i})" style="cursor:pointer">
+      <td>${esc(n)}${low ? ' <span class="pill red">要</span>' : ''}</td>
+      <td class="num"><b>${fmt(total)}</b></td>
+      <td class="num">${active.length}</td>
+      <td class="num" style="${expStyle}">${nextExp ? mdShort(nextExp) : '—'}</td>
+      <td class="num">${c ? yen(c) : '—'}</td>
+      <td class="num">${val ? yen(val) : '—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('sum-total').textContent = '合計 ' + fmt(totQ) + '本';
+  tbl.innerHTML =
+    `<thead><tr><th>串</th><th class="num">合計</th><th class="num">ロット</th><th class="num">最短期限</th><th class="num">原価/本</th><th class="num">在庫額</th></tr></thead>
+     <tbody>${rows}</tbody>
+     <tfoot><tr><td>合計</td><td class="num">${fmt(totQ)}</td><td></td><td></td><td></td><td class="num">${yen(totV)}</td></tr></tfoot>`;
+}
+function focusItem(i) {
+  const el = document.getElementById('item-' + i);
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); el.style.transition = 'box-shadow .2s'; el.style.boxShadow = '0 0 0 2px #c9622f'; setTimeout(() => el.style.boxShadow = '', 900); }
+}
+
+/* ---- 串カードの編集 ---- */
+function setField(i, f, v) {
+  const n = VIEW[i]; if (!KDB.items[n]) return;
+  if (f === 'keep') KDB.items[n].keep = (v === '' ? '' : num(v));
+  else if (f === 'costMode') KDB.items[n].costMode = (v === 'gram' ? 'gram' : 'piece');
+  else KDB.items[n][f] = num(v);
+  save();
+  if (f === 'min') syncToZaiko('最低ラインの更新');
+  renderStock();
+}
+function setLot(i, id, f, v) {
+  const n = VIEW[i]; const it = KDB.items[n]; if (!it) return;
+  const l = it.lots.find(x => x.id === id); if (!l) return;
+  if (f === 'qty') { l.qty = num(v); it.lots = it.lots.filter(x => num(x.qty) > 0); }
+  else l[f] = v;
+  save();
+  if (f === 'qty') syncToZaiko('棚卸（ロット）');
+  renderStock();
+}
+function delLot(i, id) {
+  const n = VIEW[i]; const it = KDB.items[n]; if (!it) return;
+  const l = it.lots.find(x => x.id === id);
+  ask(`${n} の ${l ? '仕込' + mdShort(l.made) + '・残' + fmt(num(l.qty)) + '本' : 'このロット'} を消すさ？（在庫から減る）`, () => {
+    it.lots = it.lots.filter(x => x.id !== id);
+    KDB.log.unshift({ at: nowStr(), type: '修正', text: `${n} のロットを削除` });
+    save(); syncToZaiko('ロット削除'); renderStock(); toast('消したさ');
+  });
+}
+// ロットの「廃棄」ボタン → 何本捨てるかをその場で選ぶ（初期値＝ロット全部）
+let dscTarget = null;
+function discardLot(i, id) {
+  const n = VIEW[i]; const it = KDB.items[n]; if (!it) return;
+  const l = it.lots.find(x => x.id === id); if (!l) return;
+  const q = num(l.qty); if (!q) { toast('このロットは0本さ'); return; }
+  dscTarget = { name: n, id };
+  document.getElementById('dsc-title').innerHTML =
+    `<b>${esc(n)}</b> を廃棄<br><span class="muted">仕込${mdShort(l.made)}・期限${mdShort(l.exp)}・残${fmt(q)}本</span>`;
+  document.getElementById('dsc-qty').innerHTML = numOpts(1, q, q, false);  // 初期値＝全部
+  document.getElementById('dsc-reason').value = '';
+  document.getElementById('dsc-bg').classList.add('show');
+}
+function closeDsc() { document.getElementById('dsc-bg').classList.remove('show'); dscTarget = null; }
+function doDiscard() {
+  if (!dscTarget) return;
+  const { name, id } = dscTarget;
+  const it = KDB.items[name]; if (!it) { closeDsc(); return; }
+  const l = it.lots.find(x => x.id === id);
+  const q = num(document.getElementById('dsc-qty').value);
+  if (!q) { toast('本数を選んでね'); return; }
+  const reason = document.getElementById('dsc-reason').value.trim() || '廃棄';
+  const lotLabel = l ? `（ロット 仕込${mdShort(l.made)}/期限${mdShort(l.exp)}）` : '';
+  const r = consumeFromLot(name, id, q);
+  const cost = costOf(name) * r.taken;
+  KDB.losses.unshift({ at: nowStr(), d: today(), name, qty: r.taken, reason, cost });
+  KDB.log.unshift({ at: nowStr(), type: 'ロス', text: `${name} −${fmt(r.taken)}本 廃棄（${reason}）${lotLabel}${cost ? ' / 原価' + yen(cost) : ''}` });
+  save(); syncToZaiko('廃棄');
+  closeDsc(); renderStock();
+  toast(`${name} を${fmt(r.taken)}本 廃棄したさ${cost ? '（' + yen(cost) + '）' : ''}`);
+}
+function delItem(i) {
+  const n = VIEW[i];
+  ask(n + ' を串の管理から外すさ？（ロットも消える）', () => {
+    delete KDB.items[n]; save(); renderStock(); toast('外したさ');
+  });
+}
+
+/* ---- 仕込み（新ロット） ---- */
+function addPrep() {
+  const n = document.getElementById('prep-ing').value;
+  const q = num(document.getElementById('prep-qty').value);
+  if (!n || !KDB.items[n] || !q) { toast('串と本数を確認してね'); return; }
+  const made = document.getElementById('prep-made').value || today();
+  let exp = document.getElementById('prep-exp').value;
+  if (!exp && KDB.items[n].keep !== '' && num(KDB.items[n].keep) > 0) exp = addDays(made, num(KDB.items[n].keep));
+  KDB.items[n].lots.push({ id: nextSeq(), made, exp: exp || '', qty: q });
+  KDB.log.unshift({ at: nowStr(), type: '仕込み', text: `${n} ＋${fmt(q)}本（仕込${mdShort(made)}${exp ? '／期限' + mdShort(exp) : ''}）` });
+  save(); syncToZaiko('仕込み');
+  document.getElementById('prep-qty').value = '';
+  document.getElementById('prep-exp').value = '';
+  renderStock();
+  toast(`${n} に ${fmt(q)}本 仕込んださ${exp ? '（期限 ' + mdShort(exp) + '）' : ''}`);
+}
+
+/* ---- ロス（廃棄） ---- */
+// 「対象（ロット）」プルダウン：まとめて or 各ロット
+function fillLossLots() {
+  const n = document.getElementById('loss-ing').value;
+  const sel = document.getElementById('loss-lot');
+  let o = '<option value="">まとめて（期限が近い順）</option>';
+  if (n && KDB.items[n]) {
+    const lots = KDB.items[n].lots.filter(l => num(l.qty) > 0).slice()
+      .sort((a, b) => { const ae = a.exp || '9999-12-31', be = b.exp || '9999-12-31'; return ae < be ? -1 : ae > be ? 1 : 0; });
+    lots.forEach(l => { o += `<option value="${l.id}">仕込${mdShort(l.made)}・期限${mdShort(l.exp)}・残${fmt(num(l.qty))}本</option>`; });
+  }
+  sel.innerHTML = o;
+  fillLossQty();
+}
+// 「廃棄する本数」プルダウン：対象の残り本数を上限にする
+function fillLossQty() {
+  const n = document.getElementById('loss-ing').value;
+  const lotId = document.getElementById('loss-lot').value;
+  let max = 0;
+  if (n && KDB.items[n]) {
+    if (lotId) { const l = KDB.items[n].lots.find(x => x.id === +lotId); max = l ? num(l.qty) : 0; }
+    else max = stockOf(n);
+  }
+  max = Math.max(1, Math.floor(max));
+  document.getElementById('loss-qty').innerHTML = numOpts(1, max, '', true);
+}
+function addLoss() {
+  const n = document.getElementById('loss-ing').value;
+  const lotId = document.getElementById('loss-lot').value;
+  const q = num(document.getElementById('loss-qty').value);
+  const reason = document.getElementById('loss-reason').value.trim();
+  if (!n || !KDB.items[n] || !q) { toast('串と廃棄する本数を確認してね'); return; }
+  let lotLabel = '';
+  if (lotId) { const l = KDB.items[n].lots.find(x => x.id === +lotId); lotLabel = l ? `（ロット 仕込${mdShort(l.made)}/期限${mdShort(l.exp)}）` : ''; }
+  ask(`${n} を ${fmt(q)}本 ${lotId ? 'このロットから' : 'まとめて'}廃棄で在庫から引くさ？`, () => {
+    const r = lotId ? consumeFromLot(n, +lotId, q) : consume(n, q);
+    const cost = costOf(n) * r.taken;
+    KDB.losses.unshift({ at: nowStr(), d: today(), name: n, qty: r.taken, reason: reason || '理由なし', cost });
+    KDB.log.unshift({ at: nowStr(), type: 'ロス', text: `${n} −${fmt(r.taken)}本 ロス（${reason || '理由なし'}${lotId ? '／ロット指定' : ''}）${lotLabel}${cost ? ' / 原価' + yen(cost) : ''}${r.short ? ' ※在庫不足' + fmt(r.short) + '本' : ''}` });
+    save(); syncToZaiko('ロス');
+    document.getElementById('loss-reason').value = '';
+    renderStock();
+    toast(`${n} を${fmt(r.taken)}本 ロス記録したさ${cost ? '（' + yen(cost) + '）' : ''}${r.short ? '\n※在庫が' + fmt(r.short) + '本 足りんかった' : ''}`);
+  });
+}
+
+/* ---- 手で串追加 ---- */
+function addItemManual() {
+  const name = document.getElementById('add-name').value.trim();
+  if (!name) { toast('串の名前を入れてね'); return; }
+  if (KDB.items[name]) { toast('もうあるさ'); return; }
+  const cost = num(document.getElementById('add-cost').value);
+  const keepRaw = document.getElementById('add-keep').value;
+  const keep = keepRaw === '' ? '' : num(keepRaw);
+  const q = num(document.getElementById('add-qty').value);
+  const lots = [];
+  if (q > 0) { const made = today(); const exp = (keep !== '' && keep > 0) ? addDays(made, keep) : ''; lots.push({ id: nextSeq(), made, exp, qty: q }); }
+  KDB.items[name] = { min: 0, par: 0, per: 1, cost, costMode: 'piece', gPer: 0, gPrice: 0, keep, lots };
+  KDB.log.unshift({ at: nowStr(), type: '追加', text: `${name} を手で追加${q ? '（' + fmt(q) + '本）' : ''}` });
+  save(); syncToZaiko('串を追加');
+  ['add-name', 'add-cost', 'add-keep', 'add-qty'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('add-cost').value = 0; document.getElementById('add-qty').value = 0;
+  renderStock();
+  toast(name + ' を追加したさ');
+}
+
+/* ========== 出数を反映 ========== */
+function reflectableDays() { return Object.keys(zDays()).sort(); }
+
+function renderReflect() {
+  const z = readZaiko();
+  const src = document.getElementById('r-src');
+  if (!z) { src.innerHTML = '<span class="warn" style="display:block">zaikoが読めてないさ。「串の設定・連携」で読み直してね。</span>'; }
+  else src.innerHTML = `連携元：${zaikoIsLive() ? '同じ端末のzaiko' : '控え'}／串の登録 ${Object.keys(KDB.items).length}種`;
+
+  const days = reflectableDays();
+  const sel = document.getElementById('r-date');
+  const unappliedLatest = [...days].reverse().find(d => !KDB.applied[d]);
+  sel.innerHTML = days.length ? days.slice().reverse().map(d =>
+    `<option value="${d}"${KDB.applied[d] ? ' style="color:#8a7f76"' : ''}>${d}${KDB.applied[d] ? '（反映ずみ）' : ''}</option>`).join('')
+    : '<option value="">（zaikoに出数が無いさ）</option>';
+  if (unappliedLatest) sel.value = unappliedLatest;
+  document.getElementById('r-preview').innerHTML = '';
+  renderApplied();
+  if (sel.value) previewReflect();
+}
+
+/* 指定日に売れた本数 = 出数 × per（串として登録済みのものだけ） */
+function soldOn(d) {
+  const rows = zDays()[d] || [];
+  const map = {};
+  rows.forEach(r => {
+    if (KDB.items[r.name] != null) {
+      const per = num(KDB.items[r.name].per) || 1;
+      map[r.name] = (map[r.name] || 0) + num(r.qty) * per;
+    }
+  });
+  return map;
+}
+
+function previewReflect() {
+  const d = document.getElementById('r-date').value;
+  const box = document.getElementById('r-preview');
+  if (!d) { box.innerHTML = ''; return; }
+  const sold = soldOn(d);
+  const names = Object.keys(sold);
+  if (!names.length) {
+    box.innerHTML = `<div class="warn" style="margin-top:9px">${esc(d)} は、登録した串に当てはまる出数が無かったさ。<br>（zaikoの商品名と、串の名前が合ってるか確認してね）</div>`;
+    return;
+  }
+  box.innerHTML = `<div class="${KDB.applied[d] ? 'warn' : 'ok'}" style="margin-top:9px">
+      ${esc(d)}${KDB.applied[d] ? ' はもう反映ずみさ（もう一度押すと二重に引くよ→止めてある）' : ' の出数を引くと…'}</div>
+    <table style="margin-top:6px"><thead><tr><th>串</th><th class="num">売れた本数</th><th class="num">反映後の残り</th></tr></thead><tbody>${
+      names.sort((a, b) => sold[b] - sold[a]).map(n => {
+        const after = stockOf(n) - sold[n];
+        return `<tr><td>${esc(n)}</td><td class="num"><b>${fmt(sold[n])}</b></td>
+          <td class="num" style="${after < 0 ? 'color:#b0402a;font-weight:700' : ''}">${fmt(after)}</td></tr>`;
+      }).join('')
+    }</tbody></table>`;
+}
+
+function doReflect(d) {
+  if (!d || KDB.applied[d]) return false;
+  const sold = soldOn(d);
+  const changes = {}; const shorts = [];
+  Object.keys(sold).forEach(n => {
+    const r = consume(n, sold[n]);
+    changes[n] = r.slices;
+    if (r.short > 0) shorts.push(n + ' ' + fmt(r.short) + '本');
+  });
+  KDB.applied[d] = { at: nowStr(), changes };
+  KDB.log.unshift({ at: nowStr(), type: '出数反映', text: `${d} の出数を反映（${Object.keys(changes).length}種）${shorts.length ? ' ※在庫不足:' + shorts.join('、') : ''}` });
+  return true;
+}
+function applyReflect() {
+  const d = document.getElementById('r-date').value;
+  if (!d) { toast('反映する日が無いさ'); return; }
+  if (KDB.applied[d]) { toast('その日はもう反映ずみさ'); return; }
+  if (!Object.keys(soldOn(d)).length) { toast('この日は引くものが無いさ'); return; }
+  ask(d + ' の出数を在庫から引くさ？', () => {
+    doReflect(d); save(); syncToZaiko('出数反映'); renderReflect(); toast(d + ' を反映したさ');
+  });
+}
+function applyAllUnreflected() {
+  const days = reflectableDays().filter(d => !KDB.applied[d] && Object.keys(soldOn(d)).length);
+  if (!days.length) { toast('未反映の日は無いさ'); return; }
+  ask(`未反映の ${days.length}日ぶん（${days[0]}〜${days[days.length - 1]}）をまとめて引くさ？`, () => {
+    let n = 0; days.forEach(d => { if (doReflect(d)) n++; });
+    save(); syncToZaiko('出数反映'); renderReflect(); toast(n + '日ぶん反映したさ');
+  });
+}
+function renderApplied() {
+  const ds = Object.keys(KDB.applied).sort().reverse();
+  const el = document.getElementById('r-applied');
+  if (!ds.length) { el.innerHTML = 'まだ無いさ'; return; }
+  el.innerHTML = ds.map(d => {
+    const rec = KDB.applied[d];
+    const tot = Object.values(rec.changes).reduce((a, c) => a + (Array.isArray(c) ? c.reduce((x, s) => x + num(s.take), 0) : num(c)), 0);
+    return `<div style="padding:5px 0;border-bottom:1px solid #f0e9e0">
+      <b style="color:#2a2420">${esc(d)}</b> <span class="pill grn">反映ずみ</span>
+      — ${Object.keys(rec.changes).length}種 / 合計${fmt(tot)}本
+      <button class="mini del" onclick="undoReflect('${esc(d)}')">取消（戻す）</button>
+      <br><span style="font-size:11px" class="muted">${esc(rec.at)}</span></div>`;
+  }).join('');
+}
+function undoReflect(d) {
+  const rec = KDB.applied[d]; if (!rec) return;
+  ask(d + ' の反映を取り消して、引いたぶんを在庫に戻すさ？', () => {
+    Object.keys(rec.changes).forEach(n => {
+      const c = rec.changes[n];
+      if (Array.isArray(c)) restore(n, c);
+      else if (typeof c === 'number') { const it = KDB.items[n]; if (it) it.lots.push({ id: nextSeq(), made: '', exp: '', qty: c }); }
+    });
+    delete KDB.applied[d];
+    KDB.log.unshift({ at: nowStr(), type: '反映取消', text: `${d} の反映を取り消し（在庫を戻した）` });
+    save(); syncToZaiko('反映取消'); renderReflect(); toast('取り消したさ');
+  });
+}
+
+/* ========== 串の設定・連携 ========== */
+function renderSetup() {
+  // 共有
+  const su = document.getElementById('share-url');
+  if (su && document.activeElement !== su) su.value = SHARE.url;
+  const gc = document.getElementById('gas-code');
+  if (gc && !gc.value) gc.value = GAS_SRC;
+  updateShareStatus();
+
+  const z = readZaiko();
+  const st = document.getElementById('z-status');
+  if (!z) {
+    st.innerHTML = '<span class="warn" style="display:block">zaikoのデータが読めてないさ。同じ端末でzaikoを一度開くか、下の「控え」を取り込んでね。</span>';
+  } else {
+    const prods = zProducts().length, days = Object.keys(zDays()).length;
+    st.innerHTML = `<span class="ok" style="display:block">読み込めたさ（${zaikoIsLive() ? '同じ端末のzaiko' : '控え'}）／商品 ${prods}件・出数の記録 ${days}日</span>`;
+  }
+  const tg = document.getElementById('sync-toggle');
+  if (tg) tg.checked = !!KDB.syncZaiko;
+  const ss = document.getElementById('sync-status');
+  if (ss) ss.innerHTML = zaikoIsLive()
+    ? `この端末のzaikoに書き戻せるさ（自動反映：<b>${KDB.syncZaiko ? 'ON' : 'OFF'}</b>）`
+    : '※いまは同じ端末のzaikoが見つからないさ。zaikoをこの端末で一度ひらいてね';
+
+  const prods = zProducts();
+  PICK = prods;
+  const box = document.getElementById('pick-list');
+  if (!prods.length) { box.innerHTML = '<span class="muted">zaikoの商品が読めないさ。連携できたら、ここに商品が並ぶよ。</span>'; return; }
+  box.innerHTML = prods.map((n, i) =>
+    `<span class="chip ${KDB.items[n] ? 'on' : ''}" onclick="togglePick(${i})">${KDB.items[n] ? '✓ ' : ''}${esc(n)}</span>`).join('');
+}
+function togglePick(i) {
+  const n = PICK[i]; if (n == null) return;
+  if (KDB.items[n]) { delete KDB.items[n]; }
+  else { KDB.items[n] = { min: 0, par: 0, per: 1, cost: 0, costMode: 'piece', gPer: 0, gPrice: 0, keep: '', lots: [] }; }
+  save(); renderSetup();
+}
+function autoPickKushi() {
+  let added = 0;
+  zProducts().forEach(n => { if (isKushiName(n) && !KDB.items[n]) { KDB.items[n] = { min: 0, par: 0, per: 1, cost: 0, costMode: 'piece', gPer: 0, gPrice: 0, keep: '', lots: [] }; added++; } });
+  save(); renderSetup();
+  toast(added ? added + '種の串を選んださ（在庫タブで本数・原価を入れてね）' : '「串」がつく新しい商品は無かったさ');
+}
+function pickAllKushi(on) {
+  if (!on) { ask('選んだ串をぜんぶ外すさ？（本数・ロットの記録も消えるよ）', () => { KDB.items = {}; save(); renderSetup(); toast('外したさ'); }); }
+}
+
+/* ---- zaiko控え ---- */
+function refreshZaiko() {
+  renderSetup(); renderLinkBanner();
+  toast(readZaiko() ? 'zaikoを読み直したさ' : 'まだ読めないさ…控えを取り込んでみて');
+}
+function importSnapshot() {
+  let d;
+  try { d = JSON.parse(document.getElementById('snap-box').value); }
+  catch (e) { toast('JSONが読めなかったさ'); return; }
+  if (!d || typeof d !== 'object') { toast('中身が変さ'); return; }
+  localStorage.setItem(SNAP, JSON.stringify(d));
+  document.getElementById('snap-box').value = '';
+  renderSetup(); renderLinkBanner();
+  toast('zaikoの控えを取り込んださ！');
+}
+function clearSnapshot() {
+  ask('取り込んだzaikoの控えを消すさ？', () => { localStorage.removeItem(SNAP); renderSetup(); renderLinkBanner(); toast('消したさ'); });
+}
+
+/* ---- バックアップ ---- */
+function exportKDB() { document.getElementById('io-box').value = JSON.stringify(KDB); }
+function copyBox() {
+  const b = document.getElementById('io-box'); b.select();
+  navigator.clipboard.writeText(b.value).then(() => toast('コピーしたさ'), () => { try { document.execCommand('copy'); toast('コピーしたさ'); } catch (e) {} });
+}
+function importKDB() {
+  let d;
+  try { d = JSON.parse(document.getElementById('io-box').value); }
+  catch (e) { toast('中身が読めなかったさ'); return; }
+  ask('今の串在庫を、貼り付けた内容で上書きするさ？', () => {
+    KDB = Object.assign(blank(), d); normalizeItems(); save(); syncToZaiko('データ読み込み'); redrawAll(); toast('読み込んださ！');
+  });
+}
+function wipe() {
+  ask('ほんとに串在庫を全部消すさ？戻せないよ', () => { KDB = blank(); save(); redrawAll(); toast('全部消したさ'); });
+}
+
+/* ========== 起動 ========== */
+function redrawAll() { renderStock(); }
+normalizeItems();
+fillQtySelects();
+document.getElementById('prep-made').value = today();
+document.getElementById('add-qty').value = 0;
+document.getElementById('add-cost').value = 0;
+renderStock();
+if (shareOn()) { startShareLoop(); pullShared({ force: true }); }   // 起動時：共有先の最新を取得
+READY = true;
+</script>
+
+
+</body></html>

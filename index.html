@@ -138,9 +138,15 @@
     </div>
     <a href="取り込みボタン.html" style="display:block;text-align:center;background:#eef4f6;color:#2a6b7c;text-decoration:none;padding:9px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:10px">📱 「取り込みボタン」を使うと貼り付けが自動になるさ → 入れ方はこちら</a>
     <label>営業日</label>
-    <input type="date" id="d-date" class="gap">
+    <div class="row gap">
+      <input type="date" id="d-date" style="flex:3">
+      <button class="mini" style="flex:0 0 58px;padding:9px 0" onclick="shiftDailyDate(-1)">昨日</button>
+      <button class="mini" style="flex:0 0 58px;padding:9px 0" onclick="shiftDailyDate(0)">今日</button>
+    </div>
+    <div id="d-date-note" class="muted gap"></div>
     <label>貼り付けエリア</label>
     <textarea id="d-paste" placeholder="例）&#10;豚バラ串&#9;42&#9;6,300&#10;やげん軟骨&#9;18&#9;2,700&#10;オリオン生&#9;55&#9;27,500"></textarea>
+    <div class="muted" style="margin-top:5px">※貼り付けたら自動で読み取るさ（下のボタンを押さんでOK）</div>
     <div class="row" style="margin-top:9px">
       <button class="act" onclick="parsePaste()">読み取る</button>
       <button class="act ghost" onclick="addManualRow()">1行手入力</button>
@@ -155,7 +161,9 @@
       <tbody id="d-rows"></tbody>
     </table>
     <div style="margin-top:11px">
-      <button class="act" onclick="saveDaily()">この内容で保存する</button>
+      <button class="act" onclick="saveAndApply()">保存して在庫にも反映する</button>
+      <div class="muted" style="margin:6px 0 10px">レシピを元に材料を計算して、在庫からまとめて引くさ。同じ日を二度引くことはないよ。</div>
+      <button class="act ghost" onclick="saveDaily()">保存だけする（在庫はさわらない）</button>
     </div>
   </div>
 
@@ -187,7 +195,7 @@
     </table>
     <div style="margin-top:11px">
       <button class="act sub2" onclick="applyToStock()">この使用量を在庫から引く</button>
-      <div class="muted" style="margin-top:6px">※同じ期間を二重に引かないよう注意（引いた履歴は「在庫」タブに残るさ）</div>
+      <div class="muted" style="margin-top:6px">※反映ずみの日は自動で飛ばすけ、二重に引く心配は要らんさ（引いた履歴は「在庫」タブに残るよ）</div>
     </div>
   </div>
   <div class="card">
@@ -200,6 +208,10 @@
 
 <!-- ============ 在庫 ============ -->
 <div id="p-stock" class="hide">
+  <a href="kushi.html" class="card" style="display:block;text-decoration:none;color:inherit">
+    <b style="color:#c9622f;font-size:15px">🍢 串焼き在庫アプリを開く</b>
+    <div class="muted" style="margin-top:4px">串のロット・消費期限・仕込みはこっちさ。同じ場所に置いてあるけ、このアプリのデータをそのまま読み書きできるよ。</div>
+  </a>
   <div class="card">
     <h2>材料マスタ・在庫</h2>
     <div class="muted gap">ジャンルをタップすると中の材料が開くさ。🔴要発注があるジャンルは最初から開いてるよ。</div>
@@ -332,7 +344,7 @@ const KEY = 'kemuri_zaiko_v1';
 let DB = load();
 
 function blank() {
-  return { ingredients: [], recipes: {}, days: {}, log: [], units: [], menus: [], manuals: {}, genres: [], genresSeeded: false };
+  return { ingredients: [], recipes: {}, days: {}, log: [], units: [], menus: [], manuals: {}, genres: [], genresSeeded: false, applied: {} };
 }
 
 /* ========== 単位 ========== */
@@ -529,7 +541,13 @@ function save() {
   try { localStorage.setItem(KEY, JSON.stringify(DB)); }
   catch (e) { toast('保存できんかったさ…\n写真が多い／大きいかも。写真を減らすか消してみて'); }
 }
-function today() { return new Date().toISOString().slice(0, 10); }
+/* 端末の日付で YYYY-MM-DD を作る。
+   toISOString() はUTCになるので、日本時間の午前0〜9時に前日扱いになってしまう。 */
+function dstr(t) {
+  return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+}
+function today() { return dstr(new Date()); }
+function nowStr() { return new Date().toLocaleString('ja-JP'); }
 
 /* ブラウザのポップアップ（alert/confirm/prompt）は環境によってブロックされるので、
    画面内のトーストと確認ダイアログで代用する */
@@ -644,6 +662,13 @@ function parsePaste() {
   out.forEach(r => map[r.name] = (map[r.name] || 0) + r.qty);
   parsed = Object.keys(map).map(k => ({ name: k, qty: map[k] }));
   renderParsed();
+  if (parsed.length) {
+    toast(parsed.length + '品よみとったさ！\n中身を確かめて保存してね');
+    const card = document.getElementById('d-result-card');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else if (txt.trim()) {
+    toast('読み取れんかったさ…\n貼り付けた中身を確かめてね');
+  }
 }
 
 function addManualRow() { parsed.push({ name: '', qty: 0 }); renderParsed(); }
@@ -667,14 +692,124 @@ function renderParsed() {
     ? `<div class="warn">${miss}品はレシピ未登録さ。保存はできるけど、材料計算には出てこないよ。</div>` : '';
 }
 
-function saveDaily() {
+function saveDaily(after) {
   const d = document.getElementById('d-date').value || today();
   const rows = parsed.filter(r => r.name.trim());
   if (!rows.length) { toast('中身が空っぽさ'); return; }
-  DB.days[d] = rows.map(r => ({ name: r.name.trim(), qty: r.qty }));
+  const old = DB.days[d];
+  const go = () => {
+    DB.days[d] = rows.map(r => ({ name: r.name.trim(), qty: num(r.qty) }));
+    save();
+    renderHistory();
+    renderDateNote();
+    toast(d + ' の出数を ' + rows.length + '品 保存したさ！');
+    if (typeof after === 'function') after(d);
+  };
+  if (old && old.length) {
+    const tot = old.reduce((a, r) => a + num(r.qty), 0);
+    ask(d + ' はもう保存ずみさ。\n（' + old.length + '品 / 合計' + fmt(tot) + '点）\n\nいまの内容で上書きするさ？', go);
+  } else {
+    go();
+  }
+}
+
+/* ========== 保存＋在庫反映（1ボタン） ========== */
+
+/* 営業日の日付ボタン（0=今日, -1=昨日） */
+function shiftDailyDate(n) {
+  const t = new Date();
+  t.setDate(t.getDate() + n);
+  document.getElementById('d-date').value = dstr(t);
+  renderDateNote();
+}
+
+/* いま選んでる営業日の状態を出す */
+function renderDateNote() {
+  const el = document.getElementById('d-date-note');
+  if (!el) return;
+  const d = document.getElementById('d-date').value;
+  if (!d) { el.innerHTML = ''; return; }
+  const day = DB.days[d];
+  if (!day || !day.length) { el.innerHTML = '<span class="muted">' + d + ' はまだ保存しとらんさ</span>'; return; }
+  const tot = day.reduce((a, r) => a + num(r.qty), 0);
+  const ap = (DB.applied || {})[d];
+  el.innerHTML = '<div class="' + (ap ? 'ok' : 'warn') + '" style="margin:0">' +
+    d + ' は保存ずみさ（' + day.length + '品 / 合計' + fmt(tot) + '点）／' +
+    (ap ? '在庫にも<b>反映ずみ</b>' : '在庫は<b>まだ未反映</b>') + '</div>';
+}
+
+/* 1日ぶんの材料使用量を出す */
+function usageOfDay(d) {
+  const use = {}, missing = new Set();
+  (DB.days[d] || []).forEach(r => {
+    const rec = DB.recipes[r.name];
+    if (!rec || !rec.length) { missing.add(r.name); return; }
+    rec.forEach(ing => { use[ing.name] = (use[ing.name] || 0) + num(ing.amount) * num(r.qty); });
+  });
+  return { use, missing: [...missing] };
+}
+
+function saveAndApply() { saveDaily(applyDay); }
+
+/* その日の材料を在庫から引く中身。保存も画面更新もしない。
+   すでに反映ずみ／引くものが無いときは null を返す */
+function applyDayCore(d) {
+  DB.applied = DB.applied || {};
+  if (DB.applied[d]) return null;
+  const r = usageOfDay(d);
+  const done = {};
+  let hit = 0, noIng = 0;
+  Object.keys(r.use).forEach(n => {
+    const ing = DB.ingredients.find(i => i.name === n);
+    if (!ing) { noIng++; return; }
+    ing.qty = num(ing.qty) - r.use[n];
+    done[n] = r.use[n];
+    hit++;
+  });
+  if (!hit) return null;
+  DB.applied[d] = { at: nowStr(), use: done };
+  DB.log.unshift({ at: nowStr(), type: '消費', text: d + ' の出数から ' + hit + '材料ぶん差引' });
+  return { hit, noIng, missing: r.missing };
+}
+
+/* その日の材料を在庫から引く。同じ日は二度引かない */
+function applyDay(d) {
+  if ((DB.applied || {})[d]) {
+    toast(d + ' は在庫に反映ずみさ。\n二重に引かんよう、在庫はさわってないよ。\n引き直すときは履歴の「反映取消」を押してね');
+    renderDateNote();
+    return;
+  }
+  const r = applyDayCore(d);
+  if (!r) {
+    toast('引ける材料が無かったさ。\n「レシピ」タブで材料を登録するか、\n「在庫」タブで材料マスタを足してね');
+    return;
+  }
   save();
-  renderHistory();
-  toast(d + ' の出数を ' + rows.length + '品 保存したさ！');
+  renderHistory(); renderDateNote(); renderStock();
+  toast(r.hit + '材料の在庫を減らしたさ！' +
+    (r.missing.length ? '\nレシピ未登録：' + r.missing.slice(0, 3).join('、') + (r.missing.length > 3 ? ' ほか' : '') : '') +
+    (r.noIng ? '\n（材料マスタに無いのが' + r.noIng + '件あったさ）' : ''));
+}
+
+/* 反映を取り消して材料を戻す（引いた時の量をそのまま戻す） */
+function unapplyDay(d) {
+  const ap = (DB.applied || {})[d];
+  if (!ap) { toast('その日はまだ在庫に反映しとらんさ'); return; }
+  ask(d + ' の在庫反映を取り消して、材料を戻すさ？', () => {
+    const use = ap.use || {};
+    let hit = 0;
+    Object.keys(use).forEach(n => {
+      const ing = DB.ingredients.find(i => i.name === n);
+      if (!ing) return;
+      ing.qty = num(ing.qty) + num(use[n]);
+      hit++;
+    });
+    delete DB.applied[d];
+    DB.log.unshift({ at: nowStr(), type: '取消', text: d + ' の在庫反映を取り消し（' + hit + '材料を戻した）' });
+    save();
+    renderHistory(); renderDateNote(); renderStock();
+    toast(hit + '材料を戻したさ');
+  });
 }
 
 function renderHistory() {
@@ -682,10 +817,15 @@ function renderHistory() {
   const el = document.getElementById('d-history');
   if (!ds.length) { el.innerHTML = 'まだ無いさ'; return; }
   el.innerHTML = ds.slice(0, 30).map(d => {
-    const tot = DB.days[d].reduce((a, r) => a + r.qty, 0);
+    const tot = DB.days[d].reduce((a, r) => a + num(r.qty), 0);
+    const ap = (DB.applied || {})[d];
     return `<div style="padding:5px 0;border-bottom:1px solid #f0e9e0">
       <b style="color:#2a2420">${d}</b> — ${DB.days[d].length}品 / 合計${fmt(tot)}点
+      ${ap ? '<span class="pill">在庫反映ずみ</span>' : ''}
       <button class="mini" onclick="loadDay('${d}')">開く</button>
+      ${ap
+        ? `<button class="mini" onclick="unapplyDay('${d}')">反映取消</button>`
+        : `<button class="mini" onclick="applyDay('${d}')">在庫に反映</button>`}
       <button class="mini del" onclick="delDay('${d}')">削除</button></div>`;
   }).join('');
 }
@@ -693,11 +833,22 @@ function loadDay(d) {
   document.getElementById('d-date').value = d;
   parsed = DB.days[d].map(r => ({ ...r }));
   renderParsed();
+  renderDateNote();
   window.scrollTo(0, 0);
 }
 function delDay(d) {
-  ask(d + ' の出数を消すさ？', () => {
-    delete DB.days[d]; save(); renderHistory(); toast('消したさ');
+  const ap = (DB.applied || {})[d];
+  ask(d + ' の出数を消すさ？' + (ap ? '\n（在庫に反映ずみだけ、材料も元に戻すよ）' : ''), () => {
+    if (ap) {
+      const use = ap.use || {};
+      Object.keys(use).forEach(n => {
+        const ing = DB.ingredients.find(i => i.name === n);
+        if (ing) ing.qty = num(ing.qty) + num(use[n]);
+      });
+      delete DB.applied[d];
+      DB.log.unshift({ at: nowStr(), type: '取消', text: d + ' を消したので在庫反映も戻した' });
+    }
+    delete DB.days[d]; save(); renderHistory(); renderDateNote(); renderStock(); toast('消したさ');
   });
 }
 
@@ -777,22 +928,25 @@ function calcUsage() {
     detail[n].map(x => `　${esc(x.menu)} ×${fmt(x.qty)} → ${fmt(x.amount)}`).join('<br>') + '</div>').join('') : '—';
 }
 
+/* 期間ぶんをまとめて在庫から引く。日ごとに反映ずみを記録するので、
+   同じ日を二度引くことはない（反映ずみの日は自動で飛ばす） */
 function applyToStock() {
   if (!lastUsage || !Object.keys(lastUsage.use).length) { toast('先に集計してね'); return; }
-  ask(lastUsage.from + '〜' + lastUsage.to + ' の使用量を在庫から引くさ？', () => {
-    let hit = 0;
-    Object.keys(lastUsage.use).forEach(n => {
-      const ing = DB.ingredients.find(i => i.name === n);
-      if (!ing) return;
-      ing.qty = num(ing.qty) - lastUsage.use[n];
-      hit++;
-    });
-    DB.log.unshift({
-      at: new Date().toLocaleString('ja-JP'), type: '消費',
-      text: `${lastUsage.from}〜${lastUsage.to} の使用量を${hit}材料ぶん差引`
-    });
+  const days = Object.keys(DB.days).filter(d => d >= lastUsage.from && d <= lastUsage.to).sort();
+  const done = days.filter(d => (DB.applied || {})[d]);
+  const todo = days.filter(d => !(DB.applied || {})[d]);
+  if (!todo.length) {
+    toast('その期間は' + (days.length ? 'ぜんぶ在庫に反映ずみさ' : '出数が無いさ'));
+    return;
+  }
+  ask(todo[0] + '〜' + todo[todo.length - 1] + ' の ' + todo.length + '日ぶんを在庫から引くさ？' +
+      (done.length ? '\n（反映ずみの' + done.length + '日は飛ばすよ）' : ''), () => {
+    let n = 0, hit = 0;
+    todo.forEach(d => { const r = applyDayCore(d); if (r) { n++; hit += r.hit; } });
+    if (!n) { toast('引ける材料が無かったさ'); return; }
     save();
-    toast(hit + '材料の在庫を減らしたさ');
+    renderHistory(); renderDateNote(); renderStock();
+    toast(n + '日ぶん・のべ' + hit + '材料の在庫を減らしたさ');
     calcUsage();
   });
 }
@@ -897,16 +1051,49 @@ function addPurchase() {
 }
 
 /* ========== レシピ ========== */
+
+/* 商品ごとの累計出数。よく出る物を選択肢の上に持ってくるのに使う */
+function menuFreq() {
+  const f = {};
+  Object.values(DB.days).forEach(rows => rows.forEach(r => {
+    f[r.name] = (f[r.name] || 0) + num(r.qty);
+  }));
+  return f;
+}
+
+/* 材料が何品のレシピで使われとるか。よく使う材料を候補の上に出すのに使う */
+function ingFreq() {
+  const f = {};
+  Object.values(DB.recipes).forEach(rec => rec.forEach(i => {
+    f[i.name] = (f[i.name] || 0) + 1;
+  }));
+  return f;
+}
+
 function renderRecipeTab() {
   const menus = new Set([...Object.keys(DB.recipes), ...(DB.menus || [])]);
   Object.values(DB.days).forEach(rows => rows.forEach(r => menus.add(r.name)));
   const sel = document.getElementById('r-menu');
   const cur = sel.value;
-  sel.innerHTML = [...menus].sort().map(m =>
-    `<option${DB.recipes[m] ? '' : ' style="color:#b0402a"'}>${esc(m)}</option>`).join('');
+
+  // 出数の多い商品を上に。出数の記録が無い物は下にまとめる
+  const freq = menuFreq();
+  const byFreq = (a, b) => (freq[b] || 0) - (freq[a] || 0) || a.localeCompare(b, 'ja');
+  const list = [...menus].sort(byFreq);
+  const opt = m => `<option value="${esc(m)}"${DB.recipes[m] ? '' : ' style="color:#b0402a"'}>` +
+    `${esc(m)}${freq[m] ? '（累計' + fmt(freq[m]) + '）' : ''}</option>`;
+  const hot = list.filter(m => freq[m]);
+  const cold = list.filter(m => !freq[m]);
+  sel.innerHTML =
+    (hot.length ? '<optgroup label="よく出る商品（累計出数の多い順）">' + hot.map(opt).join('') + '</optgroup>' : '') +
+    (cold.length ? '<optgroup label="出数の記録が無い商品">' + cold.map(opt).join('') + '</optgroup>' : '');
   if (cur && menus.has(cur)) sel.value = cur;
-  document.getElementById('ing-list').innerHTML =
-    DB.ingredients.map(g => `<option value="${esc(g.name)}">`).join('');
+
+  // 材料の候補も、よく使う材料を上に
+  const ifq = ingFreq();
+  document.getElementById('ing-list').innerHTML = [...DB.ingredients]
+    .sort((a, b) => (ifq[b.name] || 0) - (ifq[a.name] || 0) || String(a.name).localeCompare(String(b.name), 'ja'))
+    .map(g => `<option value="${esc(g.name)}">`).join('');
   loadRecipe();
 
   const keys = Object.keys(DB.recipes).sort();
@@ -916,11 +1103,12 @@ function renderRecipeTab() {
       <b style="color:#2a2420">${esc(k)}</b>：${DB.recipes[k].map(i => esc(i.name) + ' ' + i.amount + esc(i.unit || unitOf(i.name))).join(' ／ ')}
       <button class="mini del" onclick="delRecipe('${esc(k).replace(/'/g,"\\'")}')">削除</button></div>`).join('') : 'まだ無いさ';
 
-  const miss = [...menus].filter(m => !DB.recipes[m]);
+  // よく出とる商品ほど先にレシピを登録したいので、出数の多い順に並べる
+  const miss = [...menus].filter(m => !DB.recipes[m]).sort(byFreq);
   document.getElementById('r-missing').innerHTML = miss.length ? miss.map(m => {
     const q = esc(m).replace(/'/g, "\\'");
     return `<span style="display:inline-flex;margin:2px">
-      <button class="mini" style="border-radius:7px 0 0 7px" onclick="pickMenu('${q}')">${esc(m)}</button>
+      <button class="mini" style="border-radius:7px 0 0 7px" onclick="pickMenu('${q}')">${esc(m)}${freq[m] ? ' <b>' + fmt(freq[m]) + '</b>' : ''}</button>
       <button class="mini del" style="border-radius:0 7px 7px 0;padding:5px 6px" onclick="delMenu('${q}')">×</button>
     </span>`;
   }).join('') : 'ぜんぶ登録済みさ！';
@@ -1178,20 +1366,20 @@ function wipe() {
 }
 
 /* ========== 起動 ========== */
-function redrawAll() { seedGenres(); normalizeAllUnits(); renderParsed(); renderHistory(); renderStock(); renderRecipeTab(); renderManual(); }
+function redrawAll() { seedGenres(); normalizeAllUnits(); renderParsed(); renderHistory(); renderStock(); renderRecipeTab(); renderManual(); renderDateNote(); }
 document.getElementById('d-date').value = today();
 document.getElementById('u-from').value = today();
 document.getElementById('u-to').value = today();
 redrawAll();
 
-// 貼り付けたら自動で読み取る（ボタンを押す手間を省く）
+// 貼り付けたら自動で読み取る（ボタンを押す手間を省く）。
+// 貼り付け直後は textarea にまだ中身が入っとらんので、少し待ってから読む。
 document.getElementById('d-paste').addEventListener('paste', function () {
-  setTimeout(function () {
-    parsePaste();
-    const card = document.getElementById('d-result-card');
-    if (parsed.length && card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 60);
+  setTimeout(parsePaste, 60);
 });
+
+// 営業日を変えたら、その日の状態（保存ずみ／在庫反映ずみ）を出す
+document.getElementById('d-date').addEventListener('change', renderDateNote);
 </script>
 </body>
 </html>
